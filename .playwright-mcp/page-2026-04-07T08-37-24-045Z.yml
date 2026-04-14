@@ -1,0 +1,80 @@
+- generic [ref=e2]:
+  - generic [ref=e6]:
+    - generic [ref=e7] [cursor=pointer]:
+      - img [ref=e9]
+      - generic [ref=e11]: Prontuários
+    - generic [ref=e12] [cursor=pointer]:
+      - img [ref=e14]
+      - generic [ref=e17]: Mapa Auricular
+    - generic [ref=e18] [cursor=pointer]:
+      - img [ref=e20]
+      - generic [ref=e22]: Sessão
+    - generic [ref=e23] [cursor=pointer]:
+      - img [ref=e25]
+      - generic [ref=e27]: Agenda
+    - generic [ref=e28] [cursor=pointer]:
+      - img [ref=e30]
+      - generic [ref=e34]: Studio Sonoro
+    - generic [ref=e35] [cursor=pointer]:
+      - img [ref=e37]
+      - generic [ref=e39]: Protocolos
+    - generic [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e44]: Biblioteca
+    - generic [ref=e45] [cursor=pointer]:
+      - img [ref=e47]
+      - generic [ref=e50]: Aura AI
+    - generic [ref=e51] [cursor=pointer]:
+      - img [ref=e53]
+      - generic [ref=e56]: Configurações
+  - generic [ref=e65]:
+    - generic [ref=e66]:
+      - generic [ref=e67]:
+        - img [ref=e69]
+        - generic [ref=e72]:
+          - heading "Aura" [level=3] [ref=e73]
+          - paragraph [ref=e74]: Assistente Clínica
+      - generic [ref=e75]:
+        - button [ref=e76] [cursor=pointer]:
+          - img [ref=e77]
+        - button [ref=e82] [cursor=pointer]:
+          - img [ref=e83]
+    - generic [ref=e86]:
+      - generic [ref=e115]:
+        - img [ref=e117]
+        - generic [ref=e120]:
+          - paragraph [ref=e121]: Oi Aura, tudo bem?
+          - paragraph [ref=e123]: 10:36
+      - generic [ref=e124]:
+        - img [ref=e126]
+        - generic [ref=e129]:
+          - paragraph [ref=e131]: Compreendido. Como posso auxiliar melhor?
+          - paragraph [ref=e133]: 10:36
+      - generic [ref=e152]:
+        - img [ref=e154]
+        - generic [ref=e157]:
+          - paragraph [ref=e158]: Me mostre o mapa auricular
+          - paragraph [ref=e160]: 10:37
+      - generic [ref=e161]:
+        - img [ref=e163]
+        - generic [ref=e166]:
+          - paragraph [ref=e168]: Entendi! Posso ajudar com isso. O que mais você precisa?
+          - paragraph [ref=e170]: 10:37
+    - generic [ref=e88]:
+      - button "abrir_app_clinica_e_iniciar_cadastro" [ref=e171] [cursor=pointer]:
+        - img [ref=e172]
+        - generic [ref=e175]: abrir_app_clinica_e_iniciar_cadastro
+      - button "abrir_calendario_e_mostrar_hoje" [ref=e176] [cursor=pointer]:
+        - img [ref=e177]
+        - generic [ref=e179]: abrir_calendario_e_mostrar_hoje
+      - button "abrir_mapa_auricular" [ref=e180] [cursor=pointer]:
+        - img [ref=e181]
+        - generic [ref=e184]: abrir_mapa_auricular
+      - button "abrir_protocolos" [ref=e185] [cursor=pointer]:
+        - img [ref=e186]
+        - generic [ref=e188]: abrir_protocolos
+    - generic [ref=e108]:
+      - 'textbox "Diga: abrir mapa, criar paciente, sugerir protocolo..." [active] [ref=e110]'
+      - button [disabled] [ref=e111]:
+        - img [ref=e112]
+  - region "Notifications alt+T"

@@ -1,0 +1,59 @@
+- generic [ref=e2]:
+  - generic [ref=e6]:
+    - generic [ref=e7] [cursor=pointer]:
+      - img [ref=e9]
+      - generic [ref=e11]: Prontuários
+    - generic [ref=e12] [cursor=pointer]:
+      - img [ref=e14]
+      - generic [ref=e17]: Mapa Auricular
+    - generic [ref=e18] [cursor=pointer]:
+      - img [ref=e20]
+      - generic [ref=e22]: Sessão
+    - generic [ref=e23] [cursor=pointer]:
+      - img [ref=e25]
+      - generic [ref=e27]: Agenda
+    - generic [ref=e28] [cursor=pointer]:
+      - img [ref=e30]
+      - generic [ref=e34]: Studio Sonoro
+    - generic [ref=e35] [cursor=pointer]:
+      - img [ref=e37]
+      - generic [ref=e39]: Protocolos
+    - generic [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e44]: Biblioteca
+    - generic [ref=e45] [cursor=pointer]:
+      - img [ref=e47]
+      - generic [ref=e50]: Aura AI
+    - generic [ref=e51] [cursor=pointer]:
+      - img [ref=e53]
+      - generic [ref=e56]: Configurações
+  - generic [ref=e65]:
+    - generic [ref=e66]:
+      - generic [ref=e67]:
+        - img [ref=e69]
+        - generic [ref=e72]:
+          - heading "Aura" [level=3] [ref=e73]
+          - paragraph [ref=e74]: Assistente Clínica
+      - generic [ref=e75]:
+        - button [ref=e76] [cursor=pointer]:
+          - img [ref=e77]
+        - button [ref=e82] [cursor=pointer]:
+          - img [ref=e83]
+    - generic [ref=e88]:
+      - button "abrir_app_clinica_e_iniciar_cadastro" [ref=e89] [cursor=pointer]:
+        - img [ref=e90]
+        - generic [ref=e93]: abrir_app_clinica_e_iniciar_cadastro
+      - button "abrir_calendario_e_mostrar_hoje" [ref=e94] [cursor=pointer]:
+        - img [ref=e95]
+        - generic [ref=e97]: abrir_calendario_e_mostrar_hoje
+      - button "abrir_mapa_auricular" [ref=e98] [cursor=pointer]:
+        - img [ref=e99]
+        - generic [ref=e102]: abrir_mapa_auricular
+      - button "abrir_protocolos" [ref=e103] [cursor=pointer]:
+        - img [ref=e104]
+        - generic [ref=e106]: abrir_protocolos
+    - generic [ref=e108]:
+      - 'textbox "Diga: abrir mapa, criar paciente, sugerir protocolo..." [ref=e110]'
+      - button [disabled] [ref=e111]:
+        - img [ref=e112]
+  - region "Notifications alt+T"

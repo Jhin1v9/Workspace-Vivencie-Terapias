@@ -1,0 +1,65 @@
+- generic [active]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - img
+            - generic: Prontuários
+          - generic:
+            - generic:
+              - img
+            - generic: Mapa Auricular
+          - generic:
+            - generic:
+              - img
+            - generic: Sessão
+          - generic:
+            - generic:
+              - img
+            - generic: Agenda
+          - generic:
+            - generic:
+              - img
+            - generic: Finanças
+          - generic:
+            - generic:
+              - img
+            - generic: Navegador
+          - generic:
+            - generic:
+              - img
+            - generic: Notas
+          - generic:
+            - generic:
+              - img
+            - generic: Studio Sonoro
+          - generic:
+            - generic:
+              - img
+            - generic: Protocolos
+          - generic:
+            - generic:
+              - img
+            - generic: Biblioteca
+          - generic:
+            - generic:
+              - img
+            - generic: Aura AI
+          - generic:
+            - generic:
+              - img
+            - generic: Configurações
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - img
+    - button "Sair do Modo Edição" [ref=e107] [cursor=pointer]:
+      - img [ref=e108]
+      - text: Sair do Modo Edição
+    - generic [ref=e115]:
+      - paragraph [ref=e116]: Modo Edição Ativo
+      - paragraph [ref=e117]: Passe o mouse e clique para reportar
+    - region "Notifications alt+T"

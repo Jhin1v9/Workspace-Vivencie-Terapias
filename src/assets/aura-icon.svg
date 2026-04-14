@@ -1,0 +1,139 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 
+    AURA ICON - Identidade Visual da Assistente Virtual
+    Conceito: Campo áurico + Auriculoterapia + Consciência (Shen Men)
+    
+    Cores:
+    - Sage (#10b981): Cura, natureza, equilíbrio
+    - Indigo (#6366f1): Intuição, IA, sabedoria
+    - Amber (#f59e0b): Energia, Shen, vitalidade
+  -->
+  
+  <defs>
+    <!-- Gradientes principais -->
+    <linearGradient id="auraGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981">
+        <animate attributeName="stop-color" values="#10b981;#34d399;#10b981" dur="4s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="50%" stop-color="#6366f1">
+        <animate attributeName="stop-color" values="#6366f1;#818cf8;#6366f1" dur="4s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" stop-color="#f59e0b">
+        <animate attributeName="stop-color" values="#f59e0b;#fbbf24;#f59e0b" dur="4s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+    
+    <linearGradient id="coreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    
+    <!-- Filtro de brilho/glow -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="strongGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- CAMADA 1: Campo Áurico Externo (círculos concêntricos pulsantes) -->
+  <circle cx="32" cy="32" r="30" fill="none" stroke="url(#auraGradient)" stroke-width="0.5" opacity="0.3">
+    <animate attributeName="r" values="28;32;28" dur="6s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.3;0.1;0.3" dur="6s" repeatCount="indefinite"/>
+  </circle>
+  
+  <circle cx="32" cy="32" r="26" fill="none" stroke="url(#auraGradient)" stroke-width="0.8" opacity="0.4">
+    <animate attributeName="r" values="24;28;24" dur="5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.4;0.15;0.4" dur="5s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- CAMADA 2: Silhueta da Orelha (auriculoterapia) -->
+  <g transform="translate(32, 32) scale(0.85) translate(-32, -32)">
+    <!-- Contorno externo da orelha -->
+    <path 
+      d="M32 8 
+         C 22 8, 16 16, 16 28 
+         C 16 36, 20 44, 28 54 
+         C 32 58, 36 54, 36 48
+         C 36 42, 32 38, 28 34
+         C 24 30, 22 26, 22 22
+         C 22 16, 26 12, 32 12
+         C 38 12, 42 16, 42 22
+         C 42 26, 40 30, 36 34
+         C 32 38, 28 42, 28 48
+         C 28 54, 32 58, 36 54
+         C 44 44, 48 36, 48 28
+         C 48 16, 42 8, 32 8 Z"
+      fill="none" 
+      stroke="url(#auraGradient)" 
+      stroke-width="2" 
+      stroke-linecap="round"
+      filter="url(#glow)"
+    >
+      <animate attributeName="stroke-width" values="2;2.5;2" dur="3s" repeatCount="indefinite"/>
+    </path>
+    
+    <!-- Detalhe interno - anti-hélice -->
+    <path
+      d="M26 24 C 26 20, 28 18, 32 18 C 36 18, 38 20, 38 24 C 38 28, 36 32, 32 34"
+      fill="none"
+      stroke="url(#auraGradient)"
+      stroke-width="1"
+      opacity="0.6"
+    />
+    
+    <!-- Detalhe interno - concha -->
+    <ellipse cx="34" cy="36" rx="6" ry="8" fill="none" stroke="url(#auraGradient)" stroke-width="0.8" opacity="0.5"/>
+  </g>
+  
+  <!-- CAMADA 3: Ponto Shen Men (centro - consciência) -->
+  <circle cx="32" cy="32" r="5" fill="url(#coreGradient)" filter="url(#strongGlow)">
+    <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.9;1;0.9" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Centro brilhante -->
+  <circle cx="32" cy="32" r="2.5" fill="#ffffff" opacity="0.9">
+    <animate attributeName="r" values="2;3;2" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- CAMADA 4: Ondas de energia emanando -->
+  <circle cx="32" cy="32" r="10" fill="none" stroke="#f59e0b" stroke-width="1" opacity="0">
+    <animate attributeName="r" values="10;22" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;0" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  
+  <circle cx="32" cy="32" r="10" fill="none" stroke="#6366f1" stroke-width="1" opacity="0">
+    <animate attributeName="r" values="10;22" dur="3s" begin="1s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;0" dur="3s" begin="1s" repeatCount="indefinite"/>
+  </circle>
+  
+  <circle cx="32" cy="32" r="10" fill="none" stroke="#10b981" stroke-width="1" opacity="0">
+    <animate attributeName="r" values="10;22" dur="3s" begin="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;0" dur="3s" begin="2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- CAMADA 5: Partículas orbitando (representando atividade/IA) -->
+  <g>
+    <circle cx="32" cy="12" r="1.5" fill="#f59e0b" opacity="0.8">
+      <animateTransform attributeName="transform" type="rotate" from="0 32 32" to="360 32 32" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="32" cy="12" r="1" fill="#6366f1" opacity="0.6">
+      <animateTransform attributeName="transform" type="rotate" from="120 32 32" to="480 32 32" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="32" cy="12" r="1" fill="#10b981" opacity="0.6">
+      <animateTransform attributeName="transform" type="rotate" from="240 32 32" to="600 32 32" dur="8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

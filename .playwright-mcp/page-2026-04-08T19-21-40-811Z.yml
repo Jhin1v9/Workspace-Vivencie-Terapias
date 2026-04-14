@@ -1,0 +1,71 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - heading "🐛 BugDetector Pro" [level=1] [ref=e3]
+    - paragraph [ref=e4]: Ambiente de Teste Manual - v2.0
+    - generic [ref=e5]:
+      - heading "1. Teste de Ativação" [level=2] [ref=e6]
+      - generic [ref=e7]:
+        - button "🚀 Ativar BugDetector" [ref=e8] [cursor=pointer]
+        - button "📊 Ver Status" [ref=e9] [cursor=pointer]
+        - button "⚠️ Gerar Erro" [ref=e10] [cursor=pointer]
+      - generic [ref=e32]: ● ATIVO - Clique em qualquer elemento
+    - generic [ref=e13]:
+      - heading "2. Elementos para Inspeção" [level=2] [ref=e14]
+      - paragraph [ref=e15]: Ative o BugDetector e clique em qualquer elemento para inspecionar.
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - heading "Card Interativo" [level=3] [ref=e18]
+          - paragraph [ref=e19]: Clique aqui para testar
+        - generic [ref=e20]:
+          - heading "Formulário" [level=3] [ref=e21]
+          - textbox "Digite algo..." [active] [ref=e22]
+        - generic [ref=e23]:
+          - heading "Botões" [level=3] [ref=e24]
+          - button "Ação 1" [ref=e25] [cursor=pointer]
+          - button "Ação 2" [ref=e26] [cursor=pointer]
+    - generic [ref=e27]:
+      - heading "3. Console de Logs" [level=2] [ref=e28]
+      - generic [ref=e29]:
+        - generic [ref=e30]: Sistema pronto. Aguardando ativação...
+        - generic [ref=e31]: "[21:21:16] Página carregada. Pronto."
+        - generic [ref=e33]: "[21:21:22] BugDetector ativado!"
+        - generic [ref=e34]: "[21:21:22] Ativando modo de inspeção..."
+        - generic [ref=e36]: "[21:21:39] Elemento: input#b6faba85-57fd-4b4c-a6d9-be48ed200d89"
+  - generic:
+    - button "🐛" [ref=e35] [cursor=pointer]
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]: 📝
+          - generic [ref=e41]:
+            - generic [ref=e42]: Novo Report
+            - generic [ref=e43]: <input>
+        - button "×" [ref=e44] [cursor=pointer]
+      - generic [ref=e45]:
+        - generic [ref=e46]:
+          - generic [ref=e47]: Tipo
+          - generic [ref=e48]:
+            - button "🐛 Bug" [ref=e49] [cursor=pointer]
+            - button "💡 Melhoria" [ref=e50] [cursor=pointer]
+        - generic [ref=e51]:
+          - generic [ref=e52]: Severidade
+          - combobox [ref=e53]:
+            - option "🟢 Baixa"
+            - option "🟡 Média" [selected]
+            - option "🟠 Alta"
+            - option "🔴 Crítica"
+        - generic [ref=e54]:
+          - generic [ref=e55]: Descrição *
+          - textbox "Descreva o bug encontrado..." [ref=e56]
+        - generic [ref=e57]:
+          - generic [ref=e58]: Comportamento Esperado
+          - textbox "Como deveria funcionar? (opcional)" [ref=e59]
+        - generic [ref=e60] [cursor=pointer]:
+          - checkbox "Incluir screenshot" [checked] [ref=e61]
+          - generic [ref=e62]: Incluir screenshot
+      - generic [ref=e63]:
+        - button "Cancelar" [ref=e64] [cursor=pointer]
+        - button "Criar Report" [ref=e65] [cursor=pointer]
+    - generic:
+      - generic: <div>
+      - generic: 478×456px

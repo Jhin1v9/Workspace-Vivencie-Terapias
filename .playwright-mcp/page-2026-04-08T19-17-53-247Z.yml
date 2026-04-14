@@ -1,0 +1,29 @@
+- generic [ref=e2]:
+  - heading "🐛 BugDetector Pro" [level=1] [ref=e3]
+  - paragraph [ref=e4]: Ambiente de Teste Manual - v2.0
+  - generic [ref=e5]:
+    - heading "1. Teste de Ativação" [level=2] [ref=e6]
+    - generic [ref=e7]:
+      - button "🚀 Ativar BugDetector" [ref=e8] [cursor=pointer]
+      - button "📊 Ver Status" [ref=e9] [cursor=pointer]
+      - button "⚠️ Gerar Erro" [ref=e10] [cursor=pointer]
+    - generic [ref=e12]: ● INATIVO
+  - generic [ref=e13]:
+    - heading "2. Elementos para Inspeção" [level=2] [ref=e14]
+    - paragraph [ref=e15]: Clique em "Ativar" e depois clique em qualquer elemento abaixo para inspecionar.
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - heading "Card Interativo" [level=3] [ref=e18]
+        - paragraph [ref=e19]: Clique aqui para testar
+      - generic [ref=e20]:
+        - heading "Formulário" [level=3] [ref=e21]
+        - textbox "Digite algo..." [active] [ref=e22]
+      - generic [ref=e23]:
+        - heading "Botões" [level=3] [ref=e24]
+        - button "Ação 1" [ref=e25] [cursor=pointer]
+        - button "Ação 2" [ref=e26] [cursor=pointer]
+  - generic [ref=e27]:
+    - heading "3. Console de Logs" [level=2] [ref=e28]
+    - generic [ref=e29]:
+      - generic [ref=e30]: Sistema pronto. Aguardando ativação...
+      - generic [ref=e31]: "[21:17:47] Página carregada. Pronto para teste."

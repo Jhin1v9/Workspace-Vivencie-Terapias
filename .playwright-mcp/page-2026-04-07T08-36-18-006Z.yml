@@ -1,0 +1,31 @@
+- generic [ref=e2]:
+  - generic [ref=e6]:
+    - generic [ref=e7] [cursor=pointer]:
+      - img [ref=e9]
+      - generic [ref=e11]: Prontuários
+    - generic [ref=e12] [cursor=pointer]:
+      - img [ref=e14]
+      - generic [ref=e17]: Mapa Auricular
+    - generic [ref=e18] [cursor=pointer]:
+      - img [ref=e20]
+      - generic [ref=e22]: Sessão
+    - generic [ref=e23] [cursor=pointer]:
+      - img [ref=e25]
+      - generic [ref=e27]: Agenda
+    - generic [ref=e28] [cursor=pointer]:
+      - img [ref=e30]
+      - generic [ref=e34]: Studio Sonoro
+    - generic [ref=e35] [cursor=pointer]:
+      - img [ref=e37]
+      - generic [ref=e39]: Protocolos
+    - generic [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e44]: Biblioteca
+    - generic [ref=e45] [cursor=pointer]:
+      - img [ref=e47]
+      - generic [ref=e50]: Aura AI
+    - generic [ref=e51] [cursor=pointer]:
+      - img [ref=e53]
+      - generic [ref=e56]: Configurações
+  - img [ref=e61] [cursor=pointer]
+  - region "Notifications alt+T"

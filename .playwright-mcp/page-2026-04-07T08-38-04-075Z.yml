@@ -1,0 +1,76 @@
+- generic [ref=e2]:
+  - generic [ref=e6]:
+    - generic [ref=e7] [cursor=pointer]:
+      - img [ref=e9]
+      - generic [ref=e11]: Prontuários
+    - generic [ref=e12] [cursor=pointer]:
+      - img [ref=e14]
+      - generic [ref=e17]: Mapa Auricular
+    - generic [ref=e18] [cursor=pointer]:
+      - img [ref=e20]
+      - generic [ref=e22]: Sessão
+    - generic [ref=e23] [cursor=pointer]:
+      - img [ref=e25]
+      - generic [ref=e27]: Agenda
+    - generic [ref=e28] [cursor=pointer]:
+      - img [ref=e30]
+      - generic [ref=e34]: Studio Sonoro
+    - generic [ref=e35] [cursor=pointer]:
+      - img [ref=e37]
+      - generic [ref=e39]: Protocolos
+    - generic [ref=e40] [cursor=pointer]:
+      - img [ref=e42]
+      - generic [ref=e44]: Biblioteca
+    - generic [ref=e45] [cursor=pointer]:
+      - img [ref=e47]
+      - generic [ref=e50]: Aura AI
+    - generic [ref=e51] [cursor=pointer]:
+      - img [ref=e53]
+      - generic [ref=e56]: Configurações
+  - generic [ref=e65]:
+    - generic [ref=e66]:
+      - generic [ref=e67]:
+        - img [ref=e69]
+        - generic [ref=e72]:
+          - heading "Aura" [level=3] [ref=e73]
+          - paragraph [ref=e74]: Assistente Clínica
+      - generic [ref=e75]:
+        - button [ref=e76] [cursor=pointer]:
+          - img [ref=e77]
+        - button [ref=e82] [cursor=pointer]:
+          - img [ref=e83]
+    - generic [ref=e86]:
+      - generic [ref=e230]:
+        - img [ref=e232]
+        - generic [ref=e235]:
+          - paragraph [ref=e236]: Quais são os protocolos?
+          - paragraph [ref=e238]: 10:37
+      - generic [ref=e239]:
+        - img [ref=e241]
+        - generic [ref=e244]:
+          - paragraph [ref=e246]: Compreendido. Como posso auxiliar melhor?
+          - paragraph [ref=e248]: 10:37
+    - generic [ref=e249]:
+      - button [ref=e250] [cursor=pointer]:
+        - img [ref=e251]
+      - generic [ref=e253]: 2 / 2
+      - button [disabled] [ref=e254]:
+        - img [ref=e255]
+    - generic [ref=e88]:
+      - button "aplicar_protocolo_nada" [ref=e257] [cursor=pointer]:
+        - img [ref=e258]
+        - generic [ref=e260]: aplicar_protocolo_nada
+      - button "aplicar_protocolo_battlefield" [ref=e261] [cursor=pointer]:
+        - img [ref=e262]
+        - generic [ref=e264]: aplicar_protocolo_battlefield
+      - button "aplicar_protocolo_neuro" [ref=e265] [cursor=pointer]:
+        - img [ref=e266]
+        - generic [ref=e274]: aplicar_protocolo_neuro
+      - button "criar_protocolo_personalizado" [ref=e275] [cursor=pointer]:
+        - img [ref=e276]
+        - generic [ref=e279]: criar_protocolo_personalizado
+    - generic [ref=e108]:
+      - 'textbox "Diga: abrir mapa, criar paciente, sugerir protocolo..." [active] [ref=e110]'
+      - button [disabled] [ref=e111]:
+        - img [ref=e112]
+  - region "Notifications alt+T"

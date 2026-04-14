@@ -1,0 +1,72 @@
+{
+  "name": "@auris/bug-detector",
+  "version": "1.0.0",
+  "description": "Ferramenta profissional de debug com IA para qualquer projeto web",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "rollup -c rollup.config.cjs",
+    "dev": "rollup -c rollup.config.cjs -w",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "debug",
+    "bug-tracker",
+    "qa",
+    "testing",
+    "ai",
+    "gemini",
+    "react",
+    "vue",
+    "angular",
+    "inspector",
+    "screenshot"
+  ],
+  "author": "Auris Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/auris-team/bug-detector.git"
+  },
+  "bugs": {
+    "url": "https://github.com/auris-team/bug-detector/issues"
+  },
+  "homepage": "https://github.com/auris-team/bug-detector#readme",
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "html2canvas": "^1.4.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@types/uuid": "^9.0.0",
+    "rollup": "^4.0.0",
+    "rollup-plugin-dts": "^6.0.0",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "rollup-plugin-postcss": "^4.0.2",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

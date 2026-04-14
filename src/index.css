@@ -1,0 +1,320 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 6%;
+    --foreground: 0 0% 98%;
+    --card: 222 47% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 47% 11%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 222 47% 11%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 215 20% 20%;
+    --input: 215 20% 20%;
+    --ring: 160 84% 39%;
+    --radius: 0.75rem;
+    --sidebar-background: 222 47% 6%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 47% 11%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 215 20% 20%;
+    --sidebar-ring: 160 84% 39%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-auris-bg text-foreground font-body antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  ::selection {
+    @apply bg-auris-sage/30 text-white;
+  }
+}
+
+@layer components {
+  /* Glassmorphism utilities */
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+  
+  .glass-hover {
+    @apply glass hover:bg-white/10 hover:border-white/20 transition-all duration-300;
+  }
+  
+  .glass-strong {
+    @apply bg-white/10 backdrop-blur-2xl border border-white/15;
+  }
+  
+  /* Window styles */
+  .window {
+    @apply rounded-3xl shadow-glass overflow-hidden;
+    @apply bg-auris-bg/80 backdrop-blur-xl border border-white/10;
+  }
+  
+  .window-header {
+    @apply flex items-center justify-between px-4 py-3;
+    @apply bg-white/5 border-b border-white/10;
+  }
+  
+  .window-controls {
+    @apply flex gap-2;
+  }
+  
+  .window-btn {
+    @apply w-3 h-3 rounded-full transition-all duration-200;
+  }
+  
+  .window-btn-close {
+    @apply bg-auris-rose hover:bg-auris-rose-dark;
+  }
+  
+  .window-btn-minimize {
+    @apply bg-auris-amber hover:bg-auris-amber-dark;
+  }
+  
+  .window-btn-maximize {
+    @apply bg-auris-sage hover:bg-auris-sage-dark;
+  }
+  
+  /* Icon styles */
+  .desktop-icon {
+    @apply flex flex-col items-center gap-2 p-4 rounded-2xl;
+    @apply transition-all duration-300 cursor-pointer;
+    @apply hover:bg-white/10 hover:scale-105;
+  }
+  
+  .desktop-icon-circle {
+    @apply w-16 h-16 rounded-full flex items-center justify-center;
+    @apply bg-white/5 backdrop-blur-sm border border-white/10;
+    @apply transition-all duration-300;
+  }
+  
+  .desktop-icon:hover .desktop-icon-circle {
+    @apply bg-white/10 border-white/20 shadow-glow-sage;
+  }
+  
+  /* Card styles */
+  .card-glass {
+    @apply rounded-2xl p-6;
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+    @apply transition-all duration-300;
+  }
+  
+  .card-glass:hover {
+    @apply bg-white/10 border-white/15;
+  }
+  
+  /* Button styles */
+  .btn-glass {
+    @apply px-4 py-2 rounded-xl;
+    @apply bg-white/5 backdrop-blur-sm border border-white/10;
+    @apply text-sm font-medium text-white/90;
+    @apply transition-all duration-300;
+    @apply hover:bg-white/10 hover:border-white/20;
+    @apply active:scale-95;
+  }
+  
+  .btn-primary {
+    @apply px-4 py-2 rounded-xl;
+    @apply bg-auris-sage text-white font-medium;
+    @apply transition-all duration-300;
+    @apply hover:bg-auris-sage-dark hover:shadow-glow-sage;
+    @apply active:scale-95;
+  }
+  
+  .btn-amber {
+    @apply px-4 py-2 rounded-xl;
+    @apply bg-auris-amber text-white font-medium;
+    @apply transition-all duration-300;
+    @apply hover:bg-auris-amber-dark hover:shadow-glow-amber;
+    @apply active:scale-95;
+  }
+  
+  /* Input styles */
+  .input-glass {
+    @apply w-full px-4 py-3 rounded-xl;
+    @apply bg-white/5 backdrop-blur-sm border border-white/10;
+    @apply text-white placeholder:text-white/40;
+    @apply transition-all duration-300;
+    @apply focus:outline-none focus:border-auris-sage/50 focus:bg-white/10;
+  }
+  
+  /* Scrollbar styles */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Scrollbar hide utility */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Map point styles */
+  .map-point {
+    @apply cursor-pointer transition-all duration-300;
+  }
+  
+  .map-point-circle {
+    @apply transition-all duration-300;
+  }
+  
+  .map-point:hover .map-point-circle {
+    @apply scale-150;
+  }
+  
+  /* Animations */
+  .animate-breathe {
+    animation: breathe 6s ease-in-out infinite;
+  }
+  
+  @keyframes breathe {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.02);
+      opacity: 0.9;
+    }
+  }
+  
+  .animate-wave-ring {
+    animation: wave-ring 2s ease-out infinite;
+  }
+  
+  @keyframes wave-ring {
+    0% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    100% {
+      transform: scale(2.5);
+      opacity: 0;
+    }
+  }
+  
+  /* Tooltip styles */
+  .tooltip {
+    @apply absolute z-50 px-3 py-2 rounded-lg;
+    @apply bg-auris-bg/95 backdrop-blur-xl border border-white/10;
+    @apply text-sm text-white/90;
+    @apply shadow-glass;
+    pointer-events: none;
+  }
+  
+  /* Tab styles */
+  .tab-glass {
+    @apply px-4 py-2 rounded-lg text-sm font-medium;
+    @apply text-white/60 transition-all duration-300;
+    @apply hover:text-white hover:bg-white/5;
+  }
+  
+  .tab-glass-active {
+    @apply tab-glass bg-white/10 text-white;
+  }
+  
+  /* Status badges */
+  .badge {
+    @apply px-2 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .badge-sage {
+    @apply badge bg-auris-sage/20 text-auris-sage-light;
+  }
+  
+  .badge-amber {
+    @apply badge bg-auris-amber/20 text-auris-amber-light;
+  }
+  
+  .badge-rose {
+    @apply badge bg-auris-rose/20 text-auris-rose-light;
+  }
+  
+  .badge-indigo {
+    @apply badge bg-auris-indigo/20 text-auris-indigo-light;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #10b981 0%, #f59e0b 100%);
+  }
+  
+  .bg-gradient-auris {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  }
+  
+  .bg-wallpaper-akasha {
+    background: radial-gradient(ellipse at top, #1e1b4b 0%, #0f172a 50%, #020617 100%);
+  }
+  
+  .bg-wallpaper-floresta {
+    background: linear-gradient(180deg, #064e3b 0%, #065f46 50%, #047857 100%);
+  }
+  
+  .bg-wallpaper-agua {
+    background: linear-gradient(180deg, #0c4a6e 0%, #075985 50%, #0369a1 100%);
+  }
+  
+  .bg-wallpaper-terra {
+    background: linear-gradient(180deg, #451a03 0%, #78350f 50%, #92400e 100%);
+  }
+  
+  .bg-wallpaper-cosmos {
+    background: radial-gradient(ellipse at bottom, #4c1d95 0%, #1e1b4b 50%, #0f172a 100%);
+  }
+  
+  .bg-wallpaper-clinico {
+    background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+  }
+}
