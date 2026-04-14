@@ -1,4 +1,4 @@
-import { useBugDetector } from '../packages/bug-detector/src/react';
+import { useBugDetector } from '../packages/bug-detector/src/adapters/react';
 import React, { Suspense } from 'react';
 import { Desktop } from '@/components/os/Desktop';
 import { Toaster } from '@/components/ui/sonner';
