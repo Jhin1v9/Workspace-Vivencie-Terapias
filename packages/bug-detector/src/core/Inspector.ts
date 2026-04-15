@@ -81,7 +81,8 @@ export class Inspector {
         .slice(0, 2);
       
       if (classes.length > 0) {
-        selector += `.${classes.join('.')}`;
+        const escapedClasses = classes.map(c => c.replace(/([.:])/g, '\\$1')).join('.');
+        selector += `.${escapedClasses}`;
       }
 
       // Adiciona nth-child se necessário

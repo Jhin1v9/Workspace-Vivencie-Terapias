@@ -135,7 +135,11 @@ export class BugDetector {
     let target: Element;
 
     if (typeof element === 'string') {
-      target = document.querySelector(element)!;
+      try {
+        target = document.querySelector(element)!;
+      } catch {
+        throw new Error(`Seletor CSS inválido: ${element}`);
+      }
       if (!target) throw new Error(`Elemento não encontrado: ${element}`);
     } else {
       target = element;
