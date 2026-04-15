@@ -4,6 +4,7 @@
  */
 
 import type { InspectedElement, BugReport, CreateReportData } from '../types';
+import { CanvasAnnotationEngine } from './CanvasAnnotationEngine';
 
 /** Callbacks da UI */
 interface UIManagerCallbacks {
@@ -49,7 +50,7 @@ export class UIManager {
   /** Mostra modal de report */
   showReportModal(element: InspectedElement): void {
     this._currentElement = element;
-    this.renderReportModal(element);
+    void this.renderReportModal(element);
   }
 
   /** Atualiza tooltip do elemento */
@@ -252,11 +253,56 @@ export class UIManager {
   }
 
   // ============================================================================
+  // PRIVATE METHODS - Helpers
+  // ============================================================================
+
+  private async captureScreenshot(element: Element): Promise<string> {
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(element as HTMLElement, {
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        scale: window.devicePixelRatio,
+        backgroundColor: null,
+      });
+      return canvas.toDataURL('image/png');
+    } catch {
+      return '';
+    }
+  }
+
+  private getSensitiveRects(element: Element): Array<{ x: number; y: number; width: number; height: number }> {
+    const rects: Array<{ x: number; y: number; width: number; height: number }> = [];
+    const addRect = (el: Element) => {
+      const rect = el.getBoundingClientRect();
+      const bodyRect = document.body.getBoundingClientRect();
+      rects.push({
+        x: rect.left - bodyRect.left + window.scrollX,
+        y: rect.top - bodyRect.top + window.scrollY,
+        width: rect.width,
+        height: rect.height,
+      });
+    };
+
+    element.querySelectorAll('input[type="password"]').forEach(addRect);
+    ['cpf', 'ssn', 'credit', 'card', 'cvv', 'password', 'secret'].forEach((name) => {
+      element.querySelectorAll(`input[name*="${name}"], input[id*="${name}"]`).forEach(addRect);
+    });
+    element.querySelectorAll('input[type="email"]').forEach(addRect);
+    return rects;
+  }
+
+  // ============================================================================
   // PRIVATE METHODS - Report Modal
   // ============================================================================
 
-  private renderReportModal(element: InspectedElement): void {
+  private async renderReportModal(element: InspectedElement): Promise<void> {
     if (!this.container) return;
+
+    // Captura screenshot para preview e anotação
+    const screenshotUrl = await this.captureScreenshot(element.domElement || document.body);
+    let annotatedUrl: string | null = null;
 
     const modal = document.createElement('div');
     modal.setAttribute('data-bugdetector-report-modal', '');
@@ -278,6 +324,19 @@ export class UIManager {
       display: flex;
       flex-direction: column;
     `;
+
+    const screenshotSection = screenshotUrl ? `
+      <div style="margin-bottom: 16px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
+          <input type="checkbox" data-bugdetector-screenshot checked style="width: 18px; height: 18px;">
+          <span>Incluir screenshot</span>
+        </label>
+        <div data-bugdetector-screenshot-preview style="margin-top: 10px; position: relative; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+          <img src="${screenshotUrl}" style="width: 100%; height: 120px; object-fit: cover; display: block;">
+          <button data-bugdetector-annotate style="position: absolute; inset: 0; margin: auto; width: fit-content; height: fit-content; padding: 8px 14px; background: rgba(15,23,42,0.95); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; cursor: pointer; font-size: 13px; opacity: 0; transition: opacity 0.2s;">✏️ Anotar</button>
+        </div>
+      </div>
+    ` : '';
 
     modal.innerHTML = `
       <div style="padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
@@ -315,16 +374,29 @@ export class UIManager {
           <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Comportamento Esperado</label>
           <textarea data-bugdetector-expected placeholder="Como deveria funcionar? (opcional)" style="width: 100%; min-height: 60px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 14px; resize: vertical; font-family: inherit;"></textarea>
         </div>
-        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
-          <input type="checkbox" data-bugdetector-screenshot checked style="width: 18px; height: 18px;">
-          <span>Incluir screenshot</span>
-        </label>
+        ${screenshotSection}
       </div>
       <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 12px;">
         <button data-bugdetector-btn-cancel style="flex: 1; padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">Cancelar</button>
         <button data-bugdetector-btn-submit style="flex: 1; padding: 12px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;">Criar Report</button>
       </div>
     `;
+
+    // Hover no preview para mostrar botão anotar
+    const previewWrap = modal.querySelector('[data-bugdetector-screenshot-preview]') as HTMLElement | null;
+    const annotateBtn = modal.querySelector('[data-bugdetector-annotate]') as HTMLElement | null;
+    if (previewWrap && annotateBtn) {
+      previewWrap.addEventListener('mouseenter', () => annotateBtn.style.opacity = '1');
+      previewWrap.addEventListener('mouseleave', () => annotateBtn.style.opacity = '0');
+      annotateBtn.addEventListener('click', () => {
+        this.renderAnnotationOverlay((annotatedUrl || screenshotUrl), this.getSensitiveRects(element.domElement || document.body), (url) => {
+          annotatedUrl = url;
+          const img = previewWrap.querySelector('img');
+          if (img) img.src = url;
+          annotateBtn.textContent = '✏️ Reanotar';
+        });
+      });
+    }
 
     // Event listeners
     const closeModal = () => modal.remove();
@@ -343,6 +415,7 @@ export class UIManager {
       const type = activeTypeBtn?.dataset.type as 'bug' | 'improvement' | 'question';
       const severity = (modal.querySelector('[data-bugdetector-severity]') as HTMLSelectElement)?.value as 'low' | 'medium' | 'high' | 'critical';
       const expectedBehavior = (modal.querySelector('[data-bugdetector-expected]') as HTMLTextAreaElement)?.value;
+      const includeScreenshot = !!(modal.querySelector('[data-bugdetector-screenshot]') as HTMLInputElement | null)?.checked;
       try {
         await this.callbacks.onCreateReport({
           description,
@@ -350,6 +423,7 @@ export class UIManager {
           severity,
           expectedBehavior,
           element,
+          screenshot: includeScreenshot ? (annotatedUrl || screenshotUrl || undefined) : undefined,
         });
 
         closeModal();
@@ -372,6 +446,163 @@ export class UIManager {
     });
 
     this.container.appendChild(modal);
+  }
+
+  // ============================================================================
+  // PRIVATE METHODS - Annotation Overlay (Vanilla)
+  // ============================================================================
+
+  private renderAnnotationOverlay(screenshotUrl: string, sensitiveRects: Array<{ x: number; y: number; width: number; height: number }>, onApply: (url: string) => void): void {
+    if (!this.container) return;
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: #020617;
+      z-index: ${this.zIndexBase + 10};
+      display: flex;
+      flex-direction: column;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    // Toolbar
+    const toolbar = document.createElement('div');
+    toolbar.style.cssText = `
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; background: rgba(15,23,42,0.98); border-bottom: 1px solid rgba(255,255,255,0.1);
+    `;
+
+    const toolsHtml = `
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; gap: 4px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 8px;">
+          <button data-tool="rectangle" title="Retângulo" style="width: 32px; height: 32px; border-radius: 6px; border: none; background: #06b6d4; color: white; cursor: pointer; font-weight: bold;">▭</button>
+          <button data-tool="arrow" title="Seta" style="width: 32px; height: 32px; border-radius: 6px; border: none; background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-weight: bold;">→</button>
+          <button data-tool="blur" title="Blur" style="width: 32px; height: 32px; border-radius: 6px; border: none; background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-weight: bold;">◧</button>
+          <button data-tool="text" title="Texto" style="width: 32px; height: 32px; border-radius: 6px; border: none; background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-weight: bold;">T</button>
+        </div>
+        <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+        <div style="display: flex; gap: 4px;">
+          <button data-color="#ef4444" style="width: 22px; height: 22px; border-radius: 50%; background: #ef4444; border: 2px solid white; cursor: pointer;"></button>
+          <button data-color="#eab308" style="width: 22px; height: 22px; border-radius: 50%; background: #eab308; border: 2px solid transparent; cursor: pointer;"></button>
+          <button data-color="#22c55e" style="width: 22px; height: 22px; border-radius: 50%; background: #22c55e; border: 2px solid transparent; cursor: pointer;"></button>
+          <button data-color="#3b82f6" style="width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; border: 2px solid transparent; cursor: pointer;"></button>
+          <button data-color="#ffffff" style="width: 22px; height: 22px; border-radius: 50%; background: #ffffff; border: 2px solid transparent; cursor: pointer;"></button>
+        </div>
+        <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+        <button data-action="undo" style="padding: 6px 10px; background: rgba(255,255,255,0.05); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">↩ Desfazer</button>
+        <button data-action="redo" style="padding: 6px 10px; background: rgba(255,255,255,0.05); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">↪ Refazer</button>
+        <button data-action="clear" style="padding: 6px 10px; background: rgba(255,255,255,0.05); color: #f87171; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">🗑 Limpar</button>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button data-action="apply" style="padding: 8px 16px; background: linear-gradient(135deg, #06b6d4, #3b82f6); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;">✓ Aplicar</button>
+        <button data-action="cancel" style="padding: 8px 16px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">Cancelar</button>
+      </div>
+    `;
+    toolbar.innerHTML = toolsHtml;
+
+    // Canvas area
+    const canvasArea = document.createElement('div');
+    canvasArea.style.cssText = `
+      flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative;
+    `;
+
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText = 'max-width: 100%; max-height: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.6); border-radius: 8px; cursor: crosshair;';
+    canvasArea.appendChild(canvas);
+
+    // Text input overlay
+    const textInput = document.createElement('input');
+    textInput.type = 'text';
+    textInput.placeholder = 'Digite e Enter';
+    textInput.style.cssText = `
+      position: absolute; display: none; padding: 6px 10px; font-size: 16px; color: white;
+      background: rgba(15,23,42,0.98); border: 1px solid #06b6d4; border-radius: 6px; outline: none; min-width: 140px;
+    `;
+    canvasArea.appendChild(textInput);
+
+    overlay.appendChild(toolbar);
+    overlay.appendChild(canvasArea);
+    this.container.appendChild(overlay);
+
+    // Engine
+    const engine = new CanvasAnnotationEngine(canvas);
+    engine.loadImage(screenshotUrl).then(() => {
+      if (sensitiveRects.length) engine.setSensitiveRects(sensitiveRects);
+    });
+
+    engine.setTextInputCallback((x, y, callback) => {
+      const canvasRect = canvas.getBoundingClientRect();
+      const areaRect = canvasArea.getBoundingClientRect();
+      const scaleX = canvasRect.width / canvas.width;
+      const scaleY = canvasRect.height / canvas.height;
+      textInput.style.left = `${canvasRect.left - areaRect.left + x * scaleX}px`;
+      textInput.style.top = `${canvasRect.top - areaRect.top + y * scaleY}px`;
+      textInput.style.display = 'block';
+      textInput.value = '';
+      textInput.focus();
+
+      const submit = () => {
+        callback(textInput.value);
+        textInput.style.display = 'none';
+        textInput.removeEventListener('keydown', onKey);
+        textInput.removeEventListener('blur', submit);
+      };
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') submit();
+        if (e.key === 'Escape') {
+          textInput.style.display = 'none';
+          textInput.removeEventListener('keydown', onKey);
+          textInput.removeEventListener('blur', submit);
+        }
+      };
+      textInput.addEventListener('blur', submit);
+      textInput.addEventListener('keydown', onKey);
+    });
+
+    // Toolbar actions
+    const updateToolButtons = (activeTool: string) => {
+      toolbar.querySelectorAll('[data-tool]').forEach((btn) => {
+        const b = btn as HTMLElement;
+        b.style.background = b.dataset.tool === activeTool ? '#06b6d4' : 'rgba(255,255,255,0.1)';
+      });
+    };
+
+    const updateColorButtons = (activeColor: string) => {
+      toolbar.querySelectorAll('[data-color]').forEach((btn) => {
+        const b = btn as HTMLElement;
+        b.style.borderColor = b.dataset.color === activeColor ? 'white' : 'transparent';
+      });
+    };
+
+    toolbar.querySelectorAll('[data-tool]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        engine.setTool((btn as HTMLElement).dataset.tool as any);
+        updateToolButtons((btn as HTMLElement).dataset.tool as string);
+      });
+    });
+
+    toolbar.querySelectorAll('[data-color]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        engine.setColor((btn as HTMLElement).dataset.color as string);
+        updateColorButtons((btn as HTMLElement).dataset.color as string);
+      });
+    });
+
+    toolbar.querySelector('[data-action="undo"]')?.addEventListener('click', () => engine.undo());
+    toolbar.querySelector('[data-action="redo"]')?.addEventListener('click', () => engine.redo());
+    toolbar.querySelector('[data-action="clear"]')?.addEventListener('click', () => { if (confirm('Limpar todas as anotações?')) engine.clear(); });
+
+    toolbar.querySelector('[data-action="apply"]')?.addEventListener('click', () => {
+      onApply(engine.export());
+      engine.destroy();
+      overlay.remove();
+    });
+
+    toolbar.querySelector('[data-action="cancel"]')?.addEventListener('click', () => {
+      engine.destroy();
+      overlay.remove();
+    });
   }
 
   // ============================================================================

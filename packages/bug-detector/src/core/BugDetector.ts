@@ -183,7 +183,7 @@ export class BugDetector {
         height: window.innerHeight,
       },
       element,
-      screenshot: captures.screenshot,
+      screenshot: data.screenshot || captures.screenshot,
       consoleLogs: captures.consoleLogs,
       networkRequests: captures.networkRequests,
       performanceMetrics: captures.performanceMetrics,

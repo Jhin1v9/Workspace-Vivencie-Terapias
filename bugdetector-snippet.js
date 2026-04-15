@@ -1665,6 +1665,309 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
     }
 
     /**
+     * CanvasAnnotationEngine
+     * Engine vanilla para anotações em screenshots
+     * Suporta: retângulo, seta, blur, texto, undo/redo
+     */
+    class CanvasAnnotationEngine {
+        constructor(canvas) {
+            this.actions = [];
+            this.undoneActions = [];
+            this.backgroundImage = null;
+            this.currentTool = 'rectangle';
+            this.currentColor = '#ef4444';
+            this.isDrawing = false;
+            this.startX = 0;
+            this.startY = 0;
+            this.sensitiveRects = [];
+            this.handleMouseDown = (e) => {
+                if (this.currentTool === 'text') {
+                    const { x, y } = this.getCoordinates(e);
+                    if (this.textInputCallback) {
+                        this.textInputCallback(x, y, (text) => {
+                            if (text.trim()) {
+                                this.actions.push({
+                                    tool: 'text',
+                                    color: this.currentColor,
+                                    startX: x,
+                                    startY: y,
+                                    text: text.trim(),
+                                });
+                                this.undoneActions = [];
+                                this.redraw();
+                            }
+                        });
+                    }
+                    return;
+                }
+                this.isDrawing = true;
+                const { x, y } = this.getCoordinates(e);
+                this.startX = x;
+                this.startY = y;
+            };
+            this.handleMouseMove = (e) => {
+                if (!this.isDrawing)
+                    return;
+                const { x, y } = this.getCoordinates(e);
+                this.redraw();
+                this.drawPreview(this.currentTool, this.startX, this.startY, x, y, this.currentColor);
+            };
+            this.handleMouseUp = (e) => {
+                if (!this.isDrawing)
+                    return;
+                this.isDrawing = false;
+                const { x, y } = this.getCoordinates(e);
+                // Ignora cliques sem movimento (exceto blur que pode ser um clique simples)
+                const minDistance = this.currentTool === 'blur' ? 0 : 4;
+                if (Math.abs(x - this.startX) < minDistance && Math.abs(y - this.startY) < minDistance && this.currentTool !== 'blur') {
+                    this.redraw();
+                    return;
+                }
+                this.actions.push({
+                    tool: this.currentTool,
+                    color: this.currentColor,
+                    startX: this.startX,
+                    startY: this.startY,
+                    endX: x,
+                    endY: y,
+                });
+                this.undoneActions = [];
+                this.redraw();
+            };
+            this.canvas = canvas;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                throw new Error('Canvas 2D context not supported');
+            }
+            this.ctx = ctx;
+            this.setupEvents();
+        }
+        /** Carrega imagem de fundo (screenshot) */
+        loadImage(src) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    this.backgroundImage = img;
+                    this.canvas.width = img.naturalWidth;
+                    this.canvas.height = img.naturalHeight;
+                    this.redraw();
+                    resolve();
+                };
+                img.onerror = reject;
+                img.src = src;
+            });
+        }
+        /** Define áreas sensíveis para blur automático */
+        setSensitiveRects(rects) {
+            this.sensitiveRects = rects;
+            this.redraw();
+        }
+        /** Define ferramenta ativa */
+        setTool(tool) {
+            this.currentTool = tool;
+        }
+        /** Define cor atual */
+        setColor(color) {
+            this.currentColor = color;
+        }
+        /** Define callback para input de texto */
+        setTextInputCallback(callback) {
+            this.textInputCallback = callback;
+        }
+        /** Desfazer */
+        undo() {
+            if (this.actions.length === 0)
+                return;
+            const action = this.actions.pop();
+            if (action) {
+                this.undoneActions.push(action);
+                this.redraw();
+            }
+        }
+        /** Refazer */
+        redo() {
+            if (this.undoneActions.length === 0)
+                return;
+            const action = this.undoneActions.pop();
+            if (action) {
+                this.actions.push(action);
+                this.redraw();
+            }
+        }
+        /** Limpa tudo */
+        clear() {
+            this.actions = [];
+            this.undoneActions = [];
+            this.redraw();
+        }
+        /** Exporta para base64 PNG */
+        export() {
+            return this.canvas.toDataURL('image/png');
+        }
+        /** Verifica se há anotações */
+        hasAnnotations() {
+            return this.actions.length > 0;
+        }
+        /** Verifica se pode desfazer */
+        canUndo() {
+            return this.actions.length > 0;
+        }
+        /** Verifica se pode refazer */
+        canRedo() {
+            return this.undoneActions.length > 0;
+        }
+        setupEvents() {
+            this.canvas.addEventListener('mousedown', this.handleMouseDown);
+            this.canvas.addEventListener('mousemove', this.handleMouseMove);
+            window.addEventListener('mouseup', this.handleMouseUp);
+        }
+        destroy() {
+            this.canvas.removeEventListener('mousedown', this.handleMouseDown);
+            this.canvas.removeEventListener('mousemove', this.handleMouseMove);
+            window.removeEventListener('mouseup', this.handleMouseUp);
+        }
+        getCoordinates(e) {
+            const rect = this.canvas.getBoundingClientRect();
+            const scaleX = this.canvas.width / rect.width;
+            const scaleY = this.canvas.height / rect.height;
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY,
+            };
+        }
+        redraw() {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            if (this.backgroundImage) {
+                this.ctx.drawImage(this.backgroundImage, 0, 0);
+            }
+            // Aplica blur em áreas sensíveis
+            this.sensitiveRects.forEach((rect) => {
+                this.applyBlurRect(rect.x, rect.y, rect.width, rect.height);
+            });
+            // Re-desenha todas as ações
+            this.actions.forEach((action) => {
+                this.drawAction(action);
+            });
+        }
+        drawPreview(tool, x1, y1, x2, y2, color) {
+            this.drawShape(tool, x1, y1, x2, y2, color);
+        }
+        drawAction(action) {
+            if (action.tool === 'text' && action.text) {
+                this.drawText(action.startX, action.startY, action.text, action.color);
+            }
+            else if (action.endX !== undefined && action.endY !== undefined) {
+                this.drawShape(action.tool, action.startX, action.startY, action.endX, action.endY, action.color);
+            }
+        }
+        drawShape(tool, x1, y1, x2, y2, color) {
+            switch (tool) {
+                case 'rectangle':
+                    this.drawRectangle(x1, y1, x2, y2, color);
+                    break;
+                case 'arrow':
+                    this.drawArrow(x1, y1, x2, y2, color);
+                    break;
+                case 'blur':
+                    this.drawBlur(x1, y1, x2, y2);
+                    break;
+            }
+        }
+        drawRectangle(x1, y1, x2, y2, color) {
+            const width = x2 - x1;
+            const height = y2 - y1;
+            this.ctx.save();
+            this.ctx.strokeStyle = color;
+            this.ctx.lineWidth = 4;
+            this.ctx.lineJoin = 'round';
+            this.ctx.strokeRect(x1, y1, width, height);
+            this.ctx.restore();
+        }
+        drawArrow(x1, y1, x2, y2, color) {
+            const headLen = 16;
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const angle = Math.atan2(dy, dx);
+            this.ctx.save();
+            this.ctx.strokeStyle = color;
+            this.ctx.fillStyle = color;
+            this.ctx.lineWidth = 4;
+            this.ctx.lineCap = 'round';
+            this.ctx.lineJoin = 'round';
+            // Linha
+            this.ctx.beginPath();
+            this.ctx.moveTo(x1, y1);
+            this.ctx.lineTo(x2, y2);
+            this.ctx.stroke();
+            // Cabeça
+            this.ctx.beginPath();
+            this.ctx.moveTo(x2, y2);
+            this.ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+            this.ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+            this.ctx.closePath();
+            this.ctx.fill();
+            this.ctx.restore();
+        }
+        drawBlur(x1, y1, x2, y2) {
+            const width = Math.abs(x2 - x1);
+            const height = Math.abs(y2 - y1);
+            const left = Math.min(x1, x2);
+            const top = Math.min(y1, y2);
+            this.applyBlurRect(left, top, width, height);
+        }
+        applyBlurRect(x, y, width, height) {
+            if (width <= 0 || height <= 0)
+                return;
+            this.ctx.save();
+            // Pixelização com caixas de 8px
+            const pixelSize = 8;
+            const cols = Math.ceil(width / pixelSize);
+            const rows = Math.ceil(height / pixelSize);
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const px = x + col * pixelSize;
+                    const py = y + row * pixelSize;
+                    const pw = Math.min(pixelSize, x + width - px);
+                    const ph = Math.min(pixelSize, y + height - py);
+                    try {
+                        const imageData = this.ctx.getImageData(px, py, Math.max(1, pw), Math.max(1, ph));
+                        const data = imageData.data;
+                        let r = 0, g = 0, b = 0, count = 0;
+                        for (let i = 0; i < data.length; i += 4) {
+                            r += data[i];
+                            g += data[i + 1];
+                            b += data[i + 2];
+                            count++;
+                        }
+                        if (count > 0) {
+                            this.ctx.fillStyle = `rgb(${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)})`;
+                            this.ctx.fillRect(px, py, pw, ph);
+                        }
+                    }
+                    catch {
+                        // Fallback se getImageData falhar (CORS, etc.)
+                        this.ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                        this.ctx.fillRect(px, py, pw, ph);
+                    }
+                }
+            }
+            this.ctx.restore();
+        }
+        drawText(x, y, text, color) {
+            this.ctx.save();
+            this.ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            this.ctx.fillStyle = color;
+            this.ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+            this.ctx.lineWidth = 4;
+            this.ctx.lineJoin = 'round';
+            this.ctx.strokeText(text, x, y);
+            this.ctx.fillText(text, x, y);
+            this.ctx.restore();
+        }
+    }
+
+    /**
      * Gerenciador de UI
      * Controla todos os elementos visuais da ferramenta
      */
@@ -1697,7 +2000,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
         /** Mostra modal de report */
         showReportModal(element) {
             this._currentElement = element;
-            this.renderReportModal(element);
+            void this.renderReportModal(element);
         }
         /** Atualiza tooltip do elemento */
         updateElementTooltip(element) {
@@ -1879,11 +2182,52 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
             this.container.appendChild(panel);
         }
         // ============================================================================
+        // PRIVATE METHODS - Helpers
+        // ============================================================================
+        async captureScreenshot(element) {
+            try {
+                const html2canvas = (await Promise.resolve().then(function () { return html2canvas_esm; })).default;
+                const canvas = await html2canvas(element, {
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: true,
+                    scale: window.devicePixelRatio,
+                    backgroundColor: null,
+                });
+                return canvas.toDataURL('image/png');
+            }
+            catch {
+                return '';
+            }
+        }
+        getSensitiveRects(element) {
+            const rects = [];
+            const addRect = (el) => {
+                const rect = el.getBoundingClientRect();
+                const bodyRect = document.body.getBoundingClientRect();
+                rects.push({
+                    x: rect.left - bodyRect.left + window.scrollX,
+                    y: rect.top - bodyRect.top + window.scrollY,
+                    width: rect.width,
+                    height: rect.height,
+                });
+            };
+            element.querySelectorAll('input[type="password"]').forEach(addRect);
+            ['cpf', 'ssn', 'credit', 'card', 'cvv', 'password', 'secret'].forEach((name) => {
+                element.querySelectorAll(`input[name*="${name}"], input[id*="${name}"]`).forEach(addRect);
+            });
+            element.querySelectorAll('input[type="email"]').forEach(addRect);
+            return rects;
+        }
+        // ============================================================================
         // PRIVATE METHODS - Report Modal
         // ============================================================================
-        renderReportModal(element) {
+        async renderReportModal(element) {
             if (!this.container)
                 return;
+            // Captura screenshot para preview e anotação
+            const screenshotUrl = await this.captureScreenshot(element.domElement || document.body);
+            let annotatedUrl = null;
             const modal = document.createElement('div');
             modal.setAttribute('data-bugdetector-report-modal', '');
             modal.style.cssText = `
@@ -1904,6 +2248,18 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
       display: flex;
       flex-direction: column;
     `;
+            const screenshotSection = screenshotUrl ? `
+      <div style="margin-bottom: 16px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
+          <input type="checkbox" data-bugdetector-screenshot checked style="width: 18px; height: 18px;">
+          <span>Incluir screenshot</span>
+        </label>
+        <div data-bugdetector-screenshot-preview style="margin-top: 10px; position: relative; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+          <img src="${screenshotUrl}" style="width: 100%; height: 120px; object-fit: cover; display: block;">
+          <button data-bugdetector-annotate style="position: absolute; inset: 0; margin: auto; width: fit-content; height: fit-content; padding: 8px 14px; background: rgba(15,23,42,0.95); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; cursor: pointer; font-size: 13px; opacity: 0; transition: opacity 0.2s;">✏️ Anotar</button>
+        </div>
+      </div>
+    ` : '';
             modal.innerHTML = `
       <div style="padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
         <div style="display: flex; align-items: center; gap: 12px;">
@@ -1940,16 +2296,29 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
           <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Comportamento Esperado</label>
           <textarea data-bugdetector-expected placeholder="Como deveria funcionar? (opcional)" style="width: 100%; min-height: 60px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 14px; resize: vertical; font-family: inherit;"></textarea>
         </div>
-        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
-          <input type="checkbox" data-bugdetector-screenshot checked style="width: 18px; height: 18px;">
-          <span>Incluir screenshot</span>
-        </label>
+        ${screenshotSection}
       </div>
       <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 12px;">
         <button data-bugdetector-btn-cancel style="flex: 1; padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">Cancelar</button>
         <button data-bugdetector-btn-submit style="flex: 1; padding: 12px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;">Criar Report</button>
       </div>
     `;
+            // Hover no preview para mostrar botão anotar
+            const previewWrap = modal.querySelector('[data-bugdetector-screenshot-preview]');
+            const annotateBtn = modal.querySelector('[data-bugdetector-annotate]');
+            if (previewWrap && annotateBtn) {
+                previewWrap.addEventListener('mouseenter', () => annotateBtn.style.opacity = '1');
+                previewWrap.addEventListener('mouseleave', () => annotateBtn.style.opacity = '0');
+                annotateBtn.addEventListener('click', () => {
+                    this.renderAnnotationOverlay((annotatedUrl || screenshotUrl), this.getSensitiveRects(element.domElement || document.body), (url) => {
+                        annotatedUrl = url;
+                        const img = previewWrap.querySelector('img');
+                        if (img)
+                            img.src = url;
+                        annotateBtn.textContent = '✏️ Reanotar';
+                    });
+                });
+            }
             // Event listeners
             const closeModal = () => modal.remove();
             modal.querySelector('[data-bugdetector-close-modal]')?.addEventListener('click', closeModal);
@@ -1964,6 +2333,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
                 const type = activeTypeBtn?.dataset.type;
                 const severity = modal.querySelector('[data-bugdetector-severity]')?.value;
                 const expectedBehavior = modal.querySelector('[data-bugdetector-expected]')?.value;
+                const includeScreenshot = !!modal.querySelector('[data-bugdetector-screenshot]')?.checked;
                 try {
                     await this.callbacks.onCreateReport({
                         description,
@@ -1971,6 +2341,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
                         severity,
                         expectedBehavior,
                         element,
+                        screenshot: includeScreenshot ? (annotatedUrl || screenshotUrl || undefined) : undefined,
                     });
                     closeModal();
                     this.showSuccessToast('Report criado com sucesso!');
@@ -1991,6 +2362,148 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
                 });
             });
             this.container.appendChild(modal);
+        }
+        // ============================================================================
+        // PRIVATE METHODS - Annotation Overlay (Vanilla)
+        // ============================================================================
+        renderAnnotationOverlay(screenshotUrl, sensitiveRects, onApply) {
+            if (!this.container)
+                return;
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: #020617;
+      z-index: ${this.zIndexBase + 10};
+      display: flex;
+      flex-direction: column;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+            // Toolbar
+            const toolbar = document.createElement('div');
+            toolbar.style.cssText = `
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; background: rgba(15,23,42,0.98); border-bottom: 1px solid rgba(255,255,255,0.1);
+    `;
+            const toolsHtml = `
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; gap: 4px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 8px;">
+          <button data-tool="rectangle" title="Retângulo" style="width: 32px; height: 32px; border-radius: 6px; border: none; background: #06b6d4; color: white; cursor: pointer; font-weight: bold;">▭</button>
+          <button data-tool="arrow" title="Seta" style="width: 32px; height: 32px; border-radius: 6px; border: none; background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-weight: bold;">→</button>
+          <button data-tool="blur" title="Blur" style="width: 32px; height: 32px; border-radius: 6px; border: none; background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-weight: bold;">◧</button>
+          <button data-tool="text" title="Texto" style="width: 32px; height: 32px; border-radius: 6px; border: none; background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-weight: bold;">T</button>
+        </div>
+        <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+        <div style="display: flex; gap: 4px;">
+          <button data-color="#ef4444" style="width: 22px; height: 22px; border-radius: 50%; background: #ef4444; border: 2px solid white; cursor: pointer;"></button>
+          <button data-color="#eab308" style="width: 22px; height: 22px; border-radius: 50%; background: #eab308; border: 2px solid transparent; cursor: pointer;"></button>
+          <button data-color="#22c55e" style="width: 22px; height: 22px; border-radius: 50%; background: #22c55e; border: 2px solid transparent; cursor: pointer;"></button>
+          <button data-color="#3b82f6" style="width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; border: 2px solid transparent; cursor: pointer;"></button>
+          <button data-color="#ffffff" style="width: 22px; height: 22px; border-radius: 50%; background: #ffffff; border: 2px solid transparent; cursor: pointer;"></button>
+        </div>
+        <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+        <button data-action="undo" style="padding: 6px 10px; background: rgba(255,255,255,0.05); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">↩ Desfazer</button>
+        <button data-action="redo" style="padding: 6px 10px; background: rgba(255,255,255,0.05); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">↪ Refazer</button>
+        <button data-action="clear" style="padding: 6px 10px; background: rgba(255,255,255,0.05); color: #f87171; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">🗑 Limpar</button>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button data-action="apply" style="padding: 8px 16px; background: linear-gradient(135deg, #06b6d4, #3b82f6); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;">✓ Aplicar</button>
+        <button data-action="cancel" style="padding: 8px 16px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">Cancelar</button>
+      </div>
+    `;
+            toolbar.innerHTML = toolsHtml;
+            // Canvas area
+            const canvasArea = document.createElement('div');
+            canvasArea.style.cssText = `
+      flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative;
+    `;
+            const canvas = document.createElement('canvas');
+            canvas.style.cssText = 'max-width: 100%; max-height: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.6); border-radius: 8px; cursor: crosshair;';
+            canvasArea.appendChild(canvas);
+            // Text input overlay
+            const textInput = document.createElement('input');
+            textInput.type = 'text';
+            textInput.placeholder = 'Digite e Enter';
+            textInput.style.cssText = `
+      position: absolute; display: none; padding: 6px 10px; font-size: 16px; color: white;
+      background: rgba(15,23,42,0.98); border: 1px solid #06b6d4; border-radius: 6px; outline: none; min-width: 140px;
+    `;
+            canvasArea.appendChild(textInput);
+            overlay.appendChild(toolbar);
+            overlay.appendChild(canvasArea);
+            this.container.appendChild(overlay);
+            // Engine
+            const engine = new CanvasAnnotationEngine(canvas);
+            engine.loadImage(screenshotUrl).then(() => {
+                if (sensitiveRects.length)
+                    engine.setSensitiveRects(sensitiveRects);
+            });
+            engine.setTextInputCallback((x, y, callback) => {
+                const canvasRect = canvas.getBoundingClientRect();
+                const areaRect = canvasArea.getBoundingClientRect();
+                const scaleX = canvasRect.width / canvas.width;
+                const scaleY = canvasRect.height / canvas.height;
+                textInput.style.left = `${canvasRect.left - areaRect.left + x * scaleX}px`;
+                textInput.style.top = `${canvasRect.top - areaRect.top + y * scaleY}px`;
+                textInput.style.display = 'block';
+                textInput.value = '';
+                textInput.focus();
+                const submit = () => {
+                    callback(textInput.value);
+                    textInput.style.display = 'none';
+                    textInput.removeEventListener('keydown', onKey);
+                    textInput.removeEventListener('blur', submit);
+                };
+                const onKey = (e) => {
+                    if (e.key === 'Enter')
+                        submit();
+                    if (e.key === 'Escape') {
+                        textInput.style.display = 'none';
+                        textInput.removeEventListener('keydown', onKey);
+                        textInput.removeEventListener('blur', submit);
+                    }
+                };
+                textInput.addEventListener('blur', submit);
+                textInput.addEventListener('keydown', onKey);
+            });
+            // Toolbar actions
+            const updateToolButtons = (activeTool) => {
+                toolbar.querySelectorAll('[data-tool]').forEach((btn) => {
+                    const b = btn;
+                    b.style.background = b.dataset.tool === activeTool ? '#06b6d4' : 'rgba(255,255,255,0.1)';
+                });
+            };
+            const updateColorButtons = (activeColor) => {
+                toolbar.querySelectorAll('[data-color]').forEach((btn) => {
+                    const b = btn;
+                    b.style.borderColor = b.dataset.color === activeColor ? 'white' : 'transparent';
+                });
+            };
+            toolbar.querySelectorAll('[data-tool]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    engine.setTool(btn.dataset.tool);
+                    updateToolButtons(btn.dataset.tool);
+                });
+            });
+            toolbar.querySelectorAll('[data-color]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    engine.setColor(btn.dataset.color);
+                    updateColorButtons(btn.dataset.color);
+                });
+            });
+            toolbar.querySelector('[data-action="undo"]')?.addEventListener('click', () => engine.undo());
+            toolbar.querySelector('[data-action="redo"]')?.addEventListener('click', () => engine.redo());
+            toolbar.querySelector('[data-action="clear"]')?.addEventListener('click', () => { if (confirm('Limpar todas as anotações?'))
+                engine.clear(); });
+            toolbar.querySelector('[data-action="apply"]')?.addEventListener('click', () => {
+                onApply(engine.export());
+                engine.destroy();
+                overlay.remove();
+            });
+            toolbar.querySelector('[data-action="cancel"]')?.addEventListener('click', () => {
+                engine.destroy();
+                overlay.remove();
+            });
         }
         // ============================================================================
         // PRIVATE METHODS - Reports List
@@ -2156,7 +2669,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
                     height: window.innerHeight,
                 },
                 element,
-                screenshot: captures.screenshot,
+                screenshot: data.screenshot || captures.screenshot,
                 consoleLogs: captures.consoleLogs,
                 networkRequests: captures.networkRequests,
                 performanceMetrics: captures.performanceMetrics,

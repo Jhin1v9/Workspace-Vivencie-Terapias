@@ -487,4 +487,5 @@ export interface CreateReportData {
   severity?: BugReport['severity'];
   expectedBehavior?: string;
   element?: InspectedElement;
+  screenshot?: string;
 }

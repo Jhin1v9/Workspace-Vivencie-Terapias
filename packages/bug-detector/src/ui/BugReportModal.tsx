@@ -3,8 +3,9 @@
  * Modal para criação de reports de bug
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import type { InspectedElement, CreateReportData, BugReport } from '../types';
+import { ScreenshotAnnotationCanvas } from './ScreenshotAnnotationCanvas';
 
 interface BugReportModalProps {
   isOpen: boolean;
@@ -40,6 +41,41 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
   const [expectedBehavior, setExpectedBehavior] = useState('');
   const [includeScreenshot, setIncludeScreenshot] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAnnotating, setIsAnnotating] = useState(false);
+  const [annotatedScreenshotUrl, setAnnotatedScreenshotUrl] = useState<string | null>(null);
+
+  // Calcula retângulos sensíveis para blur automático
+  const sensitiveRects = useMemo(() => {
+    if (!element?.domElement) return [];
+    const rects: Array<{ x: number; y: number; width: number; height: number }> = [];
+
+    const addRect = (el: Element) => {
+      const rect = el.getBoundingClientRect();
+      const bodyRect = document.body.getBoundingClientRect();
+      rects.push({
+        x: rect.left - bodyRect.left + window.scrollX,
+        y: rect.top - bodyRect.top + window.scrollY,
+        width: rect.width,
+        height: rect.height,
+      });
+    };
+
+    // Inputs de senha
+    element.domElement.querySelectorAll('input[type="password"]').forEach(addRect);
+
+    // Inputs de dados sensíveis por nome
+    const sensitiveNames = ['cpf', 'ssn', 'credit', 'card', 'cvv', 'password', 'secret'];
+    sensitiveNames.forEach((name) => {
+      element.domElement.querySelectorAll(`input[name*="${name}"], input[id*="${name}"]`).forEach(addRect);
+    });
+
+    // Emails
+    element.domElement.querySelectorAll('input[type="email"]').forEach(addRect);
+
+    return rects;
+  }, [element]);
+
+  const activeScreenshotUrl = annotatedScreenshotUrl ?? screenshotDataUrl;
 
   const handleSubmit = useCallback(async () => {
     if (!element || !description.trim()) return;
@@ -51,6 +87,7 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
         severity,
         expectedBehavior: expectedBehavior.trim() || undefined,
         element,
+        screenshot: includeScreenshot ? (activeScreenshotUrl || undefined) : undefined,
       });
       // Reset
       setType('bug');
@@ -58,17 +95,41 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
       setDescription('');
       setExpectedBehavior('');
       setIncludeScreenshot(true);
+      setAnnotatedScreenshotUrl(null);
       onClose();
     } finally {
       setIsSubmitting(false);
     }
-  }, [description, element, expectedBehavior, onClose, onSubmit, severity, type]);
+  }, [description, element, expectedBehavior, onClose, onSubmit, severity, type, includeScreenshot, activeScreenshotUrl]);
 
   const handleClose = useCallback(() => {
-    if (!isSubmitting) onClose();
+    if (!isSubmitting) {
+      setAnnotatedScreenshotUrl(null);
+      onClose();
+    }
   }, [isSubmitting, onClose]);
 
+  const handleApplyAnnotation = useCallback((dataUrl: string) => {
+    setAnnotatedScreenshotUrl(dataUrl);
+    setIsAnnotating(false);
+  }, []);
+
+  const handleCancelAnnotation = useCallback(() => {
+    setIsAnnotating(false);
+  }, []);
+
   if (!isOpen || !element) return null;
+
+  if (isAnnotating && activeScreenshotUrl) {
+    return (
+      <ScreenshotAnnotationCanvas
+        screenshotDataUrl={activeScreenshotUrl}
+        sensitiveRects={sensitiveRects}
+        onApply={handleApplyAnnotation}
+        onCancel={handleCancelAnnotation}
+      />
+    );
+  }
 
   return (
     <div
@@ -217,7 +278,7 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
             </div>
 
             {/* Screenshot */}
-            {screenshotDataUrl && (
+            {activeScreenshotUrl && (
               <div>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -231,12 +292,23 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
                   </div>
                 </label>
                 {includeScreenshot && (
-                  <div className="mt-3 p-2 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                  <div className="mt-3 p-2 bg-slate-800/30 rounded-lg border border-slate-700/50 relative group">
                     <img
-                      src={screenshotDataUrl}
+                      src={activeScreenshotUrl}
                       alt="Screenshot"
                       className="w-full h-32 object-cover rounded-lg"
                     />
+                    <button
+                      onClick={() => setIsAnnotating(true)}
+                      className="absolute inset-0 m-auto w-fit h-fit px-4 py-2 bg-slate-900/90 text-white text-sm font-medium rounded-lg border border-slate-600 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                    >
+                      ✏️ Anotar Screenshot
+                    </button>
+                    {annotatedScreenshotUrl && (
+                      <div className="absolute top-2 right-2 px-2 py-1 bg-cyan-500 text-white text-xs font-medium rounded">
+                        Anotado
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
