@@ -24,6 +24,7 @@ import { IntelligenceEngine } from '../intelligence/IntelligenceEngine';
 import { ReportGenerator } from '../intelligence/ReportGenerator';
 import { UIManager } from '../ui/UIManager';
 import { SessionReplayEngine } from '../replay/SessionReplayEngine';
+import { CloudAPI } from '../integrations/CloudAPI';
 // UUID nativo - sem dependência externa
 
 /** Classe principal BugDetector */
@@ -39,6 +40,7 @@ export class BugDetector {
   private reports: BugReport[] = [];
   private chatSessions: Map<string, ChatSession> = new Map();
   private sessionReplay: SessionReplayEngine;
+  private cloudAPI: CloudAPI | null = null;
 
   /** Event callbacks */
   private onActivate?: () => void;
@@ -53,6 +55,12 @@ export class BugDetector {
     this.capture = new CaptureManager(this.config.getCapture());
     this.intelligence = new IntelligenceEngine(this.config.getAI());
     this.sessionReplay = new SessionReplayEngine();
+
+    // Setup cloud integration
+    const cloudConfig = this.config.getIntegrations().cloud;
+    if (cloudConfig) {
+      this.cloudAPI = new CloudAPI(cloudConfig);
+    }
 
     // Setup callbacks
     const callbacks = this.config.get().callbacks;
@@ -208,6 +216,15 @@ export class BugDetector {
     this.reports.push(report);
     const { domElement, ...elementWithoutDom } = report.element;
     await this.storage.save({ ...report, element: elementWithoutDom as InspectedElement });
+
+    // Envia para cloud se configurado
+    if (this.cloudAPI) {
+      try {
+        await this.cloudAPI.sendReport(report);
+      } catch (err) {
+        console.error('Erro ao enviar report para cloud:', err);
+      }
+    }
 
     // Callback
     this.onReportCreated?.(report);

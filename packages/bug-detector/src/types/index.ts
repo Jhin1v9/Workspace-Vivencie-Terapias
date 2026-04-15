@@ -48,6 +48,12 @@ export interface IntegrationsConfig {
   jira?: JiraConfig;
   slack?: SlackConfig;
   webhook?: WebhookConfig;
+  cloud?: CloudConfig;
+}
+
+/** Configuração do Cloud Dashboard */
+export interface CloudConfig {
+  baseURL: string;
 }
 
 /** Configuração do GitHub */

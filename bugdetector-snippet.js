@@ -3049,6 +3049,39 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
     }
 
     /**
+     * CloudAPI
+     * Cliente para enviar reports ao dashboard cloud do BugDetector
+     */
+    class CloudAPI {
+        constructor(config) {
+            this.baseURL = config.baseURL.replace(/\/$/, '');
+        }
+        /** Envia um report para a nuvem */
+        async sendReport(report) {
+            const response = await fetch(`${this.baseURL}/api/reports`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(report),
+            });
+            if (!response.ok) {
+                const text = await response.text().catch(() => 'Unknown error');
+                throw new Error(`Cloud API error ${response.status}: ${text}`);
+            }
+            return response.json();
+        }
+        /** Verifica saúde da API */
+        async healthCheck() {
+            try {
+                const response = await fetch(`${this.baseURL}/api/health`, { method: 'GET' });
+                return response.ok;
+            }
+            catch {
+                return false;
+            }
+        }
+    }
+
+    /**
      * Classe principal do BugDetector
      * Orquestra todos os componentes do sistema
      */
@@ -3061,12 +3094,18 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
             this.currentElement = null;
             this.reports = [];
             this.chatSessions = new Map();
+            this.cloudAPI = null;
             this.config = Config.getInstance(config);
             this.inspector = new Inspector();
             this.storage = new StorageManager(this.config.getPersistMethod());
             this.capture = new CaptureManager(this.config.getCapture());
             this.intelligence = new IntelligenceEngine(this.config.getAI());
             this.sessionReplay = new SessionReplayEngine();
+            // Setup cloud integration
+            const cloudConfig = this.config.getIntegrations().cloud;
+            if (cloudConfig) {
+                this.cloudAPI = new CloudAPI(cloudConfig);
+            }
             // Setup callbacks
             const callbacks = this.config.get().callbacks;
             this.onActivate = callbacks?.onActivate;
@@ -3197,6 +3236,15 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
             this.reports.push(report);
             const { domElement, ...elementWithoutDom } = report.element;
             await this.storage.save({ ...report, element: elementWithoutDom });
+            // Envia para cloud se configurado
+            if (this.cloudAPI) {
+                try {
+                    await this.cloudAPI.sendReport(report);
+                }
+                catch (err) {
+                    console.error('Erro ao enviar report para cloud:', err);
+                }
+            }
             // Callback
             this.onReportCreated?.(report);
             // Inicia análise IA se configurado

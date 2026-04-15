@@ -1,0 +1,119 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.app { min-height: 100vh; }
+
+.header {
+  padding: 20px 24px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.header h1 { margin: 0; font-size: 22px; }
+
+.stats { display: flex; gap: 10px; }
+.badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #334155;
+}
+.badge.pending { background: #b45309; }
+.badge.resolved { background: #15803d; }
+
+.main { padding: 24px; max-width: 960px; margin: 0 auto; }
+.center { text-align: center; color: #94a3b8; padding: 40px 0; }
+
+.list { display: flex; flex-direction: column; gap: 16px; }
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.meta { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot.critical { background: #ef4444; }
+.dot.high { background: #f97316; }
+.dot.medium { background: #eab308; }
+.dot.low { background: #3b82f6; }
+
+.actions { display: flex; gap: 8px; }
+.actions button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  background: #334155;
+  color: #e2e8f0;
+}
+.actions button.danger { background: #7f1d1d; }
+
+.toggle {
+  margin-top: 12px;
+  background: transparent;
+  border: none;
+  color: #38bdf8;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+}
+
+.details {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #334155;
+  display: grid;
+  gap: 12px;
+}
+
+.details label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.details a { color: #38bdf8; word-break: break-all; }
+.details code {
+  background: #0f172a;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  display: inline-block;
+  word-break: break-all;
+}
+
+.thumb {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  border-radius: 8px;
+  background: #0f172a;
+}
+
+.hint { font-size: 12px; color: #94a3b8; margin: 0; }
