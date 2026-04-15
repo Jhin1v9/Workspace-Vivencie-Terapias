@@ -14,6 +14,7 @@ interface BugReportModalProps {
   screenshotDataUrl: string | null;
   onClose: () => void;
   onSubmit: (data: CreateReportData) => Promise<BugReport>;
+  primaryColor?: string;
 }
 
 const reportTypes = [
@@ -41,6 +42,7 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
   screenshotDataUrl,
   onClose,
   onSubmit,
+  primaryColor = '#06b6d4',
 }) => {
   const [type, setType] = useState<BugReport['type']>('bug');
   const [severity, setSeverity] = useState<BugReport['severity']>('medium');
@@ -460,7 +462,8 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
             <button
               onClick={handleSubmit}
               disabled={!description.trim() || isSubmitting || isRecording}
-              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-lg hover:from-cyan-400 hover:to-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-2 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: `linear-gradient(135deg, ${primaryColor}, #3b82f6)` }}
             >
               {isSubmitting ? (
                 <>

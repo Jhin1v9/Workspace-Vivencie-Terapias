@@ -28,6 +28,10 @@ export interface BugDetectorConfig {
   autoActivateInDev?: boolean;
   /** Z-index base para elementos da UI (default: 999999) */
   zIndexBase?: number;
+  /** White-label / custom branding */
+  branding?: BrandingConfig;
+  /** Modo guest (apenas botão de report, sem painel completo) */
+  guestMode?: boolean;
 }
 
 /** Configuração de IA */
@@ -54,6 +58,20 @@ export interface IntegrationsConfig {
 /** Configuração do Cloud Dashboard */
 export interface CloudConfig {
   baseURL: string;
+}
+
+/** Configuração de white-label / branding */
+export interface BrandingConfig {
+  /** Cor primária (botões, badges) */
+  primaryColor?: string;
+  /** Cor de fundo dos modais/paineis */
+  backgroundColor?: string;
+  /** URL do logo customizado */
+  logoURL?: string;
+  /** Posição do botão flutuante */
+  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  /** Texto do botão flutuante */
+  buttonText?: string;
 }
 
 /** Configuração do GitHub */
@@ -218,6 +236,12 @@ export interface BugReport {
   // Análise IA
   /** Análise da IA */
   aiAnalysis?: AIAnalysis;
+  
+  // Integrações
+  /** Número da issue no GitHub */
+  githubIssueNumber?: number;
+  /** URL da issue no GitHub */
+  githubIssueUrl?: string;
 }
 
 /** Log do console */

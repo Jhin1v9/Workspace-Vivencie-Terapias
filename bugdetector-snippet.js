@@ -29,6 +29,8 @@ var BugDetector = (function (exports) {
             includeStyles: true,
         },
         callbacks: {},
+        branding: {},
+        guestMode: false,
     };
     /** Classe de configuração */
     class Config {
@@ -51,6 +53,7 @@ var BugDetector = (function (exports) {
                 integrations: { ...defaultConfig.integrations, ...userConfig.integrations },
                 capture: { ...defaultConfig.capture, ...userConfig.capture },
                 callbacks: { ...defaultConfig.callbacks, ...userConfig.callbacks },
+                branding: { ...defaultConfig.branding, ...userConfig.branding },
             };
         }
         /** Obtém configuração completa */
@@ -68,6 +71,14 @@ var BugDetector = (function (exports) {
         /** Obtém configuração de captura */
         getCapture() {
             return this.config.capture;
+        }
+        /** Obtém configuração de branding */
+        getBranding() {
+            return this.config.branding;
+        }
+        /** Verifica se está em modo guest */
+        isGuestMode() {
+            return this.config.guestMode;
         }
         /** Verifica se está em modo headless */
         isHeadless() {
@@ -2139,12 +2150,14 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
      */
     /** Classe UIManager */
     class UIManager {
-        constructor(callbacks, zIndexBase = 999999) {
+        constructor(callbacks, zIndexBase = 999999, branding = {}, guestMode = false) {
             this.container = null;
             this._isVisible = false;
             this._currentElement = null;
             this.callbacks = callbacks;
             this.zIndexBase = zIndexBase;
+            this.branding = branding;
+            this.guestMode = guestMode;
             this.createContainer();
         }
         /** Mostra a UI */
@@ -2208,24 +2221,37 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
             const existing = this.container.querySelector('[data-bugdetector-floating-button]');
             if (existing)
                 existing.remove();
+            const primary = this.branding.primaryColor || '#3b82f6';
+            const secondary = this.branding.backgroundColor || '#8b5cf6';
+            const pos = this.branding.position || 'bottom-right';
+            const posMap = {
+                'bottom-right': { bottom: '20px', right: '20px' },
+                'bottom-left': { bottom: '20px', left: '20px' },
+                'top-right': { top: '20px', right: '20px' },
+                'top-left': { top: '20px', left: '20px' },
+            };
+            const p = posMap[pos] || posMap['bottom-right'];
             const button = document.createElement('button');
             button.setAttribute('data-bugdetector-floating-button', '');
-            button.innerHTML = '🐛';
+            button.innerHTML = this.branding.logoURL ? `<img src="${this.branding.logoURL}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;">` : (this.branding.buttonText || '🐛');
             button.title = 'BugDetector Pro';
             button.style.cssText = `
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      ${p.top ? `top: ${p.top};` : ''}
+      ${p.bottom ? `bottom: ${p.bottom};` : ''}
+      ${p.left ? `left: ${p.left};` : ''}
+      ${p.right ? `right: ${p.right};` : ''}
       width: 56px;
       height: 56px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      background: ${this.branding.buttonText || this.branding.logoURL ? primary : `linear-gradient(135deg, ${primary}, ${secondary})`};
       color: white;
       border: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       cursor: pointer;
       pointer-events: auto;
-      font-size: 24px;
+      font-size: ${this.branding.buttonText ? '14px' : '24px'};
+      font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2294,6 +2320,8 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
                 existing.remove();
                 return;
             }
+            const primary = this.branding.primaryColor || '#3b82f6';
+            const bg = this.branding.backgroundColor || 'rgba(15, 23, 42, 0.98)';
             const panel = document.createElement('div');
             panel.setAttribute('data-bugdetector-panel', '');
             panel.style.cssText = `
@@ -2301,7 +2329,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
       top: 20px;
       right: 80px;
       width: 320px;
-      background: rgba(15, 23, 42, 0.98);
+      background: ${bg};
       border-radius: 12px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.4);
       pointer-events: auto;
@@ -2309,6 +2337,11 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
       border: 1px solid rgba(255,255,255,0.1);
       color: white;
       overflow: hidden;
+    `;
+            const reportsButton = this.guestMode ? '' : `
+      <button data-bugdetector-btn-reports style="padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+        <span>📋</span> Ver Reports
+      </button>
     `;
             panel.innerHTML = `
       <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
@@ -2320,12 +2353,10 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
       </div>
       <div style="padding: 16px;">
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button data-bugdetector-btn-inspect style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+          <button data-bugdetector-btn-inspect style="padding: 12px; background: ${primary}; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
             <span>🔍</span> Inspecionar Elemento
           </button>
-          <button data-bugdetector-btn-reports style="padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-            <span>📋</span> Ver Reports
-          </button>
+          ${reportsButton}
           <button data-bugdetector-btn-settings style="padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
             <span>⚙️</span> Configurações
           </button>
@@ -3120,7 +3151,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
                     onElementInspect: (el) => { this.currentElement = el; },
                     onCreateReport: (data) => this.createReport(data),
                     onSendMessage: (sessionId, message) => this.processChatMessage(sessionId, message),
-                }, this.config.get().zIndexBase);
+                }, this.config.get().zIndexBase, this.config.getBranding(), this.config.isGuestMode());
             }
             // Carrega reports existentes
             this.loadReports();
@@ -3407,7 +3438,29 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
                 throw new Error('Report não encontrado');
             const { GitHubIntegration } = await Promise.resolve().then(function () { return GitHub; });
             const integration = new GitHubIntegration(github || { repo: repo, token: '' });
-            await integration.createIssue(report);
+            const result = await integration.createIssue(report);
+            await this.updateReport(reportId, {
+                githubIssueNumber: result.number,
+                githubIssueUrl: result.url,
+            });
+        }
+        /** Sincroniza status do GitHub de volta para o report */
+        async syncGitHubStatus(reportId) {
+            const { github } = this.config.getIntegrations();
+            if (!github) {
+                throw new Error('Configuração do GitHub não encontrada');
+            }
+            const report = this.getReport(reportId);
+            if (!report)
+                throw new Error('Report não encontrado');
+            if (!report.githubIssueNumber) {
+                throw new Error('Report não possui issue vinculada no GitHub');
+            }
+            const { GitHubIntegration } = await Promise.resolve().then(function () { return GitHub; });
+            const integration = new GitHubIntegration(github);
+            const status = await integration.getIssueStatus(report.githubIssueNumber);
+            const newStatus = status.state === 'open' ? 'pending' : 'resolved';
+            await this.updateReport(reportId, { status: newStatus });
         }
         /** Cria ticket no Jira */
         async createJiraTicket(reportId) {
@@ -11527,6 +11580,24 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
                 const error = await response.json();
                 throw new Error(`Erro ao adicionar comentário: ${error.message}`);
             }
+        }
+        /** Obtém status de uma issue */
+        async getIssueStatus(issueNumber) {
+            const response = await fetch(`https://api.github.com/repos/${this.config.repo}/issues/${issueNumber}`, {
+                headers: {
+                    'Authorization': `Bearer ${this.config.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                },
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(`Erro ao buscar issue: ${error.message}`);
+            }
+            const data = await response.json();
+            return {
+                state: data.state,
+                url: data.html_url,
+            };
         }
         /** Busca issues existentes */
         async searchIssues(query) {

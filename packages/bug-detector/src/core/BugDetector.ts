@@ -77,7 +77,7 @@ export class BugDetector {
         onElementInspect: (el) => { this.currentElement = el; },
         onCreateReport: (data) => this.createReport(data),
         onSendMessage: (sessionId, message) => this.processChatMessage(sessionId, message),
-      }, this.config.get().zIndexBase);
+      }, this.config.get().zIndexBase, this.config.getBranding(), this.config.isGuestMode());
     }
 
     // Carrega reports existentes
@@ -420,7 +420,33 @@ export class BugDetector {
 
     const { GitHubIntegration } = await import('../integrations/GitHub');
     const integration = new GitHubIntegration(github || { repo: repo!, token: '' });
-    await integration.createIssue(report);
+    const result = await integration.createIssue(report);
+
+    await this.updateReport(reportId, {
+      githubIssueNumber: result.number,
+      githubIssueUrl: result.url,
+    });
+  }
+
+  /** Sincroniza status do GitHub de volta para o report */
+  async syncGitHubStatus(reportId: string): Promise<void> {
+    const { github } = this.config.getIntegrations();
+    if (!github) {
+      throw new Error('Configuração do GitHub não encontrada');
+    }
+
+    const report = this.getReport(reportId);
+    if (!report) throw new Error('Report não encontrado');
+    if (!report.githubIssueNumber) {
+      throw new Error('Report não possui issue vinculada no GitHub');
+    }
+
+    const { GitHubIntegration } = await import('../integrations/GitHub');
+    const integration = new GitHubIntegration(github);
+    const status = await integration.getIssueStatus(report.githubIssueNumber);
+
+    const newStatus = status.state === 'open' ? 'pending' : 'resolved';
+    await this.updateReport(reportId, { status: newStatus });
   }
 
   /** Cria ticket no Jira */

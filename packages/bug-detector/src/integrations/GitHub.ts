@@ -102,6 +102,30 @@ export class GitHubIntegration {
     }
   }
 
+  /** Obtém status de uma issue */
+  async getIssueStatus(issueNumber: number): Promise<{ state: string; url: string }> {
+    const response = await fetch(
+      `https://api.github.com/repos/${this.config.repo}/issues/${issueNumber}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${this.config.token}`,
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`Erro ao buscar issue: ${error.message}`);
+    }
+
+    const data = await response.json();
+    return {
+      state: data.state,
+      url: data.html_url,
+    };
+  }
+
   /** Busca issues existentes */
   async searchIssues(query: string): Promise<Array<{ number: number; title: string; state: string }>> {
     const response = await fetch(

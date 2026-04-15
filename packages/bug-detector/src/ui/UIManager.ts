@@ -3,7 +3,7 @@
  * Controla todos os elementos visuais da ferramenta
  */
 
-import type { InspectedElement, BugReport, CreateReportData } from '../types';
+import type { InspectedElement, BugReport, CreateReportData, BrandingConfig } from '../types';
 import { CanvasAnnotationEngine } from './CanvasAnnotationEngine';
 import { ScreenRecorder } from '../capture/ScreenRecorder';
 
@@ -23,10 +23,19 @@ export class UIManager {
   private _isVisible = false;
   private _currentElement: InspectedElement | null = null;
   private zIndexBase: number;
+  private branding: BrandingConfig;
+  private guestMode: boolean;
 
-  constructor(callbacks: UIManagerCallbacks, zIndexBase: number = 999999) {
+  constructor(
+    callbacks: UIManagerCallbacks,
+    zIndexBase: number = 999999,
+    branding: BrandingConfig = {},
+    guestMode: boolean = false,
+  ) {
     this.callbacks = callbacks;
     this.zIndexBase = zIndexBase;
+    this.branding = branding;
+    this.guestMode = guestMode;
     this.createContainer();
   }
 
@@ -99,24 +108,38 @@ export class UIManager {
     const existing = this.container.querySelector('[data-bugdetector-floating-button]');
     if (existing) existing.remove();
 
+    const primary = this.branding.primaryColor || '#3b82f6';
+    const secondary = this.branding.backgroundColor || '#8b5cf6';
+    const pos = this.branding.position || 'bottom-right';
+    const posMap: Record<string, { bottom?: string; top?: string; right?: string; left?: string }> = {
+      'bottom-right': { bottom: '20px', right: '20px' },
+      'bottom-left': { bottom: '20px', left: '20px' },
+      'top-right': { top: '20px', right: '20px' },
+      'top-left': { top: '20px', left: '20px' },
+    };
+    const p = posMap[pos] || posMap['bottom-right'];
+
     const button = document.createElement('button');
     button.setAttribute('data-bugdetector-floating-button', '');
-    button.innerHTML = '🐛';
+    button.innerHTML = this.branding.logoURL ? `<img src="${this.branding.logoURL}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;">` : (this.branding.buttonText || '🐛');
     button.title = 'BugDetector Pro';
     button.style.cssText = `
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      ${p.top ? `top: ${p.top};` : ''}
+      ${p.bottom ? `bottom: ${p.bottom};` : ''}
+      ${p.left ? `left: ${p.left};` : ''}
+      ${p.right ? `right: ${p.right};` : ''}
       width: 56px;
       height: 56px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      background: ${this.branding.buttonText || this.branding.logoURL ? primary : `linear-gradient(135deg, ${primary}, ${secondary})`};
       color: white;
       border: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       cursor: pointer;
       pointer-events: auto;
-      font-size: 24px;
+      font-size: ${this.branding.buttonText ? '14px' : '24px'};
+      font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -196,6 +219,9 @@ export class UIManager {
       return;
     }
 
+    const primary = this.branding.primaryColor || '#3b82f6';
+    const bg = this.branding.backgroundColor || 'rgba(15, 23, 42, 0.98)';
+
     const panel = document.createElement('div');
     panel.setAttribute('data-bugdetector-panel', '');
     panel.style.cssText = `
@@ -203,7 +229,7 @@ export class UIManager {
       top: 20px;
       right: 80px;
       width: 320px;
-      background: rgba(15, 23, 42, 0.98);
+      background: ${bg};
       border-radius: 12px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.4);
       pointer-events: auto;
@@ -211,6 +237,12 @@ export class UIManager {
       border: 1px solid rgba(255,255,255,0.1);
       color: white;
       overflow: hidden;
+    `;
+
+    const reportsButton = this.guestMode ? '' : `
+      <button data-bugdetector-btn-reports style="padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+        <span>📋</span> Ver Reports
+      </button>
     `;
 
     panel.innerHTML = `
@@ -223,12 +255,10 @@ export class UIManager {
       </div>
       <div style="padding: 16px;">
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button data-bugdetector-btn-inspect style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+          <button data-bugdetector-btn-inspect style="padding: 12px; background: ${primary}; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
             <span>🔍</span> Inspecionar Elemento
           </button>
-          <button data-bugdetector-btn-reports style="padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-            <span>📋</span> Ver Reports
-          </button>
+          ${reportsButton}
           <button data-bugdetector-btn-settings style="padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
             <span>⚙️</span> Configurações
           </button>

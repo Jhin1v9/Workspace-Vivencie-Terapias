@@ -2,7 +2,7 @@
  * Gerenciamento de configuração do BugDetector
  */
 
-import type { BugDetectorConfig, AIConfig, IntegrationsConfig, CaptureConfig } from '../types';
+import type { BugDetectorConfig, AIConfig, IntegrationsConfig, CaptureConfig, BrandingConfig } from '../types';
 
 /** Configuração padrão */
 export const DEFAULT_CONFIG: Required<BugDetectorConfig> = {
@@ -29,6 +29,8 @@ export const DEFAULT_CONFIG: Required<BugDetectorConfig> = {
     includeStyles: true,
   },
   callbacks: {},
+  branding: {},
+  guestMode: false,
 };
 
 /** Classe de configuração */
@@ -60,6 +62,7 @@ export class Config {
       integrations: { ...defaultConfig.integrations, ...userConfig.integrations },
       capture: { ...defaultConfig.capture, ...userConfig.capture },
       callbacks: { ...defaultConfig.callbacks, ...userConfig.callbacks },
+      branding: { ...defaultConfig.branding, ...userConfig.branding },
     };
   }
 
@@ -81,6 +84,16 @@ export class Config {
   /** Obtém configuração de captura */
   getCapture(): Required<CaptureConfig> {
     return this.config.capture as Required<CaptureConfig>;
+  }
+
+  /** Obtém configuração de branding */
+  getBranding(): BrandingConfig {
+    return this.config.branding;
+  }
+
+  /** Verifica se está em modo guest */
+  isGuestMode(): boolean {
+    return this.config.guestMode;
   }
 
   /** Verifica se está em modo headless */

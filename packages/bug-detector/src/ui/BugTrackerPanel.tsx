@@ -14,6 +14,8 @@ interface BugTrackerPanelProps {
   onClose: () => void;
   onResolve: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  primaryColor?: string;
+  onSyncGitHub?: (id: string) => Promise<void>;
 }
 
 type TabFilter = 'all' | 'pending' | 'resolved';
@@ -38,6 +40,8 @@ export const BugTrackerPanel: React.FC<BugTrackerPanelProps> = ({
   onClose,
   onResolve,
   onDelete,
+  onSyncGitHub,
+  primaryColor = '#06b6d4',
 }) => {
   const [filter, setFilter] = useState<TabFilter>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -155,6 +159,15 @@ export const BugTrackerPanel: React.FC<BugTrackerPanelProps> = ({
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
+                  {report.githubIssueNumber && onSyncGitHub && (
+                    <button
+                      onClick={() => { void onSyncGitHub(report.id); }}
+                      title="Sincronizar GitHub"
+                      className="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors"
+                    >
+                      🔄
+                    </button>
+                  )}
                   {(report.status === 'pending' || report.status === 'analyzing') && (
                     <button
                       onClick={() => handleResolve(report.id)}
@@ -178,7 +191,8 @@ export const BugTrackerPanel: React.FC<BugTrackerPanelProps> = ({
               <div className="mt-3 pt-3 border-t border-slate-700/50">
                 <button
                   onClick={() => setExpandedId(expandedId === report.id ? null : report.id)}
-                  className="text-xs text-cyan-400 hover:text-cyan-300"
+                  className="text-xs hover:opacity-80"
+                  style={{ color: primaryColor }}
                 >
                   {expandedId === report.id ? '▲ Ocultar detalhes' : '▼ Ver detalhes'}
                 </button>

@@ -204,6 +204,7 @@ export function BugDetectorProvider({
             screenshotDataUrl={screenshotDataUrl}
             onClose={handleModalClose}
             onSubmit={createReport}
+            primaryColor={config.branding?.primaryColor}
           />
           <BugTrackerPanel
             isOpen={isPanelOpen}
@@ -212,6 +213,8 @@ export function BugDetectorProvider({
             onClose={() => setIsPanelOpen(false)}
             onResolve={resolveReport}
             onDelete={deleteReport}
+            onSyncGitHub={detectorRef.current ? (id) => detectorRef.current!.syncGitHubStatus(id) : undefined}
+            primaryColor={config.branding?.primaryColor}
           />
         </>
       )}
@@ -275,6 +278,7 @@ export function useBugDetectorAdvanced(
   refreshReports: () => Promise<void>;
   analyzeWithAI: (reportId: string) => Promise<void>;
   createGitHubIssue: (reportId: string, repo?: string) => Promise<void>;
+  syncGitHubStatus: (reportId: string) => Promise<void>;
   notifySlack: (reportId: string, channel?: string) => Promise<void>;
   openPanel: () => void;
   closePanel: () => void;
@@ -305,6 +309,12 @@ export function useBugDetectorAdvanced(
     await detectorRef.current.createGitHubIssue(reportId, repo);
   }, []);
 
+  const syncGitHubStatus = useCallback(async (reportId: string) => {
+    if (!detectorRef.current) return;
+    await detectorRef.current.syncGitHubStatus(reportId);
+    await refreshReports();
+  }, [refreshReports]);
+
   const notifySlack = useCallback(async (reportId: string, channel?: string) => {
     if (!detectorRef.current) return;
     await detectorRef.current.notifySlack(reportId, channel);
@@ -317,6 +327,7 @@ export function useBugDetectorAdvanced(
     refreshReports,
     analyzeWithAI,
     createGitHubIssue,
+    syncGitHubStatus,
     notifySlack,
     openPanel: () => setIsPanelOpen(true),
     closePanel: () => setIsPanelOpen(false),
