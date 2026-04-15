@@ -72,4 +72,31 @@ module.exports = [
     plugins: commonPlugins,
     external: commonExternal,
   },
+  // IIFE bundle (vanilla, para bookmarklet/extensão/userscript)
+  {
+    input: 'src/adapters/vanilla.ts',
+    output: [
+      {
+        file: 'dist/bug-detector.iife.js',
+        format: 'iife',
+        name: 'BugDetector',
+        sourcemap: true,
+        exports: 'named',
+        inlineDynamicImports: true,
+      },
+    ],
+    plugins: [
+      resolve(),
+      commonjs(),
+      typescript({
+        tsconfig: './tsconfig.json',
+        exclude: ['**/*.test.ts'],
+      }),
+      postcss({
+        extract: true,
+        minimize: true,
+      }),
+    ],
+    external: [], // bundleia html2canvas junto
+  },
 ];
