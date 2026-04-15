@@ -144,6 +144,10 @@ export interface InspectedElement {
   childCount: number;
   /** Referência ao elemento DOM */
   domElement: Element;
+  /** Nome do componente (React/Vue) */
+  componentName?: string;
+  /** Caminho do arquivo */
+  filePath?: string;
 }
 
 /** Informação do elemento pai */
@@ -208,9 +212,9 @@ export interface BugReport {
 
 /** Log do console */
 export interface ConsoleLog {
-  level: 'log' | 'warn' | 'error' | 'info';
+  type: 'log' | 'warn' | 'error' | 'info';
   message: string;
-  timestamp: number;
+  timestamp: string;
   stack?: string;
 }
 
@@ -219,11 +223,13 @@ export interface NetworkRequest {
   url: string;
   method: string;
   status: number;
-  statusText: string;
+  statusText?: string;
   duration: number;
-  timestamp: number;
+  timestamp: string;
   requestHeaders?: Record<string, string>;
   responseHeaders?: Record<string, string>;
+  /** Mensagem de erro se a requisição falhou */
+  error?: string;
 }
 
 /** Métricas de performance */
@@ -235,30 +241,47 @@ export interface PerformanceMetrics {
   largestContentfulPaint?: number;
 }
 
+/** Informações do dispositivo */
+export interface DeviceInfo {
+  os: string;
+  browser: string;
+  resolution: string;
+  userAgent: string;
+  language: string;
+  timezone: string;
+}
+
 // ============================================================================
 // AI ANALYSIS
 // ============================================================================
 
 /** Análise da IA */
 export interface AIAnalysis {
+  /** Provider usado (gemini, deepseek, openai) */
+  provider: 'gemini' | 'deepseek' | 'openai';
   /** Categoria do problema */
-  category: BugCategory;
+  category?: BugCategory;
   /** Severidade */
   severity: 'low' | 'medium' | 'high' | 'critical';
   /** Causa raiz */
   rootCause: string;
   /** Descrição técnica */
-  technicalDescription: string;
+  technicalDescription?: string;
+  analysis?: string;
+  solution?: string;
+  promptDev?: string;
   /** Recomendações */
-  recommendations: string[];
+  recommendations?: string[];
   /** Código corrigido (opcional) */
   codeFix?: CodeFix;
   /** Análises das personalidades */
-  personalityAnalyses: PersonalityAnalysis[];
+  personalityAnalyses?: PersonalityAnalysis[];
   /** Score de confiança (0-100) */
   confidence: number;
   /** Tempo de processamento */
-  processingTime: number;
+  processingTime?: number;
+  /** Timestamp de geração */
+  generatedAt: string;
 }
 
 /** Categoria de bug */

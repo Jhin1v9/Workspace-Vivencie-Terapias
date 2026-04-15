@@ -162,7 +162,7 @@ export class GitHubIntegration {
       lines.push(`**Causa Raiz:** ${report.aiAnalysis.rootCause}`);
       lines.push('');
       lines.push('### Recomendações');
-      report.aiAnalysis.recommendations.forEach(rec => {
+      report.aiAnalysis.recommendations?.forEach(rec => {
         lines.push(`- ${rec}`);
       });
       lines.push('');

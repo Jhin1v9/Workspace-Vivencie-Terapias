@@ -7,6 +7,9 @@ import { createContext, useContext } from 'react';
 import type { BugDetector } from '../core/BugDetector';
 import type { UseBugDetectorReturn } from '../types';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ReactModule = any;
+
 interface BugDetectorContextValue extends UseBugDetectorReturn {
   detector: BugDetector | null;
 }

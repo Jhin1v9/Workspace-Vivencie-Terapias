@@ -427,6 +427,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
 
   private createFallbackConsolidation(report: BugReport, analyses: PersonalityAnalysis[]): AIAnalysis {
     return {
+      provider: 'gemini',
       category: 'other',
       severity: report.severity,
       rootCause: 'Não foi possível determinar a causa raiz automaticamente',
@@ -435,6 +436,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
       personalityAnalyses: analyses,
       confidence: 30,
       processingTime: 0,
+      generatedAt: new Date().toISOString(),
     };
   }
 }

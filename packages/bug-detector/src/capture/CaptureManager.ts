@@ -167,14 +167,14 @@ export class CaptureManager {
     };
 
     // Sobrescreve com LIMITAÇÃO DE MEMÓRIA (FIFO)
-    const captureLog = (level: ConsoleLog['level'], ...args: any[]) => {
+    const captureLog = (type: ConsoleLog['type'], ...args: any[]) => {
       const log: ConsoleLog = {
-        level,
+        type,
         message: args.map(arg => 
           typeof arg === 'object' ? JSON.stringify(arg).slice(0, 1000) : String(arg).slice(0, 1000)
         ).join(' '),
-        timestamp: Date.now(),
-        stack: level === 'error' ? new Error().stack?.slice(0, 2000) : undefined,
+        timestamp: new Date().toISOString(),
+        stack: type === 'error' ? new Error().stack?.slice(0, 2000) : undefined,
       };
       
       // FIFO: remove o mais antigo se atingiu limite
@@ -184,7 +184,7 @@ export class CaptureManager {
       this.consoleLogs.push(log);
 
       // Mantém comportamento original
-      this.originalConsole[level]?.apply(console, args);
+      this.originalConsole[type]?.apply(console, args);
     };
 
     console.log = (...args) => captureLog('log', ...args);
@@ -226,7 +226,7 @@ export class CaptureManager {
           status: response.status,
           statusText: response.statusText,
           duration: performance.now() - startTime,
-          timestamp: Date.now(),
+          timestamp: new Date().toISOString(),
         });
 
         return response;
@@ -237,7 +237,7 @@ export class CaptureManager {
           status: 0,
           statusText: 'Network Error',
           duration: performance.now() - startTime,
-          timestamp: Date.now(),
+          timestamp: new Date().toISOString(),
         });
         throw error;
       }
@@ -267,7 +267,7 @@ export class CaptureManager {
           status: xhr.status,
           statusText: xhr.statusText,
           duration: performance.now() - startTime,
-          timestamp: Date.now(),
+          timestamp: new Date().toISOString(),
         });
       });
 

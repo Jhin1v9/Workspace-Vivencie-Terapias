@@ -136,7 +136,7 @@ export class ReportGenerator {
       lines.push('');
       lines.push('```');
       report.consoleLogs.forEach(log => {
-        const emoji = { log: '📝', warn: '⚠️', error: '❌', info: 'ℹ️' }[log.level];
+        const emoji = { log: '📝', warn: '⚠️', error: '❌', info: 'ℹ️' }[log.type];
         lines.push(`${emoji} [${new Date(log.timestamp).toLocaleTimeString()}] ${log.message}`);
       });
       lines.push('```');
@@ -176,7 +176,7 @@ export class ReportGenerator {
     lines.push('');
 
     lines.push('### Descrição Técnica');
-    lines.push(analysis.technicalDescription);
+    lines.push(analysis.technicalDescription || 'Não disponível');
     lines.push('');
 
     if (analysis.codeFix) {
@@ -199,7 +199,7 @@ export class ReportGenerator {
     }
 
     lines.push('### Recomendações');
-    analysis.recommendations.forEach(rec => {
+    analysis.recommendations?.forEach(rec => {
       lines.push(`- ${rec}`);
     });
     lines.push('');
@@ -207,7 +207,7 @@ export class ReportGenerator {
     // Análises das personalidades
     lines.push('### Análises dos Especialistas');
     lines.push('');
-    analysis.personalityAnalyses.forEach(p => {
+    analysis.personalityAnalyses?.forEach(p => {
       lines.push(`#### ${p.icon} ${p.name} (${p.confidence}%)`);
       lines.push('');
       if (p.insights.length > 0) {

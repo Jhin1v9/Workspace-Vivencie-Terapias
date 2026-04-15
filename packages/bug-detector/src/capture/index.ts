@@ -1,0 +1,5 @@
+/**
+ * Capture - Captura de screenshots e gravação de tela
+ */
+
+export { CaptureManager } from './CaptureManager';
