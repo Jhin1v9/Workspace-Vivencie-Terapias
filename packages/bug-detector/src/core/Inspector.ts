@@ -12,6 +12,8 @@ export class Inspector {
   private isActive = false;
   private onElementSelect: ((element: InspectedElement) => void) | null = null;
   private onElementHover: ((element: InspectedElement | null) => void) | null = null;
+  private idCounter = 0;
+  private elementIdMap = new WeakMap<Element, string>();
 
   /** Ativa o modo de inspeção */
   activate(
@@ -60,8 +62,28 @@ export class Inspector {
     return this.createInspectedElement(element);
   }
 
+  /** Obtém ou cria um ID único estável para o elemento */
+  private getElementId(element: Element): string {
+    let id = this.elementIdMap.get(element);
+    if (!id) {
+      id = `bd-${++this.idCounter}`;
+      this.elementIdMap.set(element, id);
+      try {
+        element.setAttribute('data-bd-id', id);
+      } catch {
+        // ignore em ambientes restritos
+      }
+    }
+    return id;
+  }
+
   /** Gera seletor CSS único */
   generateSelector(element: Element): string {
+    const bdId = this.elementIdMap.get(element) || element.getAttribute('data-bd-id');
+    if (bdId) {
+      return `[data-bd-id="${bdId}"]`;
+    }
+
     const path: string[] = [];
     let current: Element | null = element;
 
@@ -70,18 +92,18 @@ export class Inspector {
 
       // Adiciona ID se existir
       if (current.id) {
-        selector += `#${current.id}`;
+        selector += `#${CSS.escape(current.id)}`;
         path.unshift(selector);
         break;
       }
 
-      // Adiciona classes significativas
+      // Adiciona classes significativas (escapadas)
       const classes = Array.from(current.classList)
         .filter(c => !c.startsWith('_') && !c.includes('scoped'))
         .slice(0, 2);
       
       if (classes.length > 0) {
-        const escapedClasses = classes.map(c => c.replace(/([.:])/g, '\\$1')).join('.');
+        const escapedClasses = classes.map(c => CSS.escape(c)).join('.');
         selector += `.${escapedClasses}`;
       }
 
@@ -254,9 +276,10 @@ export class Inspector {
 
   private createInspectedElement(element: Element): InspectedElement {
     const rect = element.getBoundingClientRect();
+    const bdId = this.getElementId(element);
     
     return {
-      id: crypto.randomUUID(),
+      id: bdId,
       tag: element.tagName.toLowerCase(),
       elementId: element.id || null,
       className: element.className,

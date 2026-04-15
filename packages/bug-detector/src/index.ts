@@ -1,15 +1,15 @@
 /**
  * @auris/bug-detector
  * Ferramenta profissional de debug com IA para qualquer projeto web
- * 
+ *
  * @example
  * ```typescript
  * // React
  * import { useBugDetector } from '@auris/bug-detector/react';
- * 
+ *
  * // Vue
  * import { createBugDetector } from '@auris/bug-detector/vue';
- * 
+ *
  * // Vanilla JS
  * import { BugDetector } from '@auris/bug-detector';
  * ```
@@ -22,7 +22,6 @@ export { Config, DEFAULT_CONFIG } from './core/Config';
 
 // Types
 export type {
-  // Config
   BugDetectorConfig,
   AIConfig,
   IntegrationsConfig,
@@ -32,42 +31,39 @@ export type {
   WebhookConfig,
   CaptureConfig,
   BugDetectorCallbacks,
-  
-  // Element
   InspectedElement,
   ParentInfo,
-  
-  // Report
   BugReport,
+  BugStats,
   ConsoleLog,
   NetworkRequest,
   PerformanceMetrics,
   CreateReportData,
-  
-  // AI
   AIAdapter,
   AIAnalysis,
   BugCategory,
   PersonalityAnalysis,
   PersonalityType,
   CodeFix,
-  
-  // Chat
   ChatMessage,
   ChatSession,
-  
-  // Storage
   StorageAdapter,
   ReportFilters,
-  
-  // Export
   ExportOptions,
   ExportResult,
-  
-  // React
   UseBugDetectorProps,
   UseBugDetectorReturn,
 } from './types';
+
+// UI React
+export {
+  BugDetectorOverlay,
+  BugReportModal,
+  BugTrackerPanel,
+} from './ui';
+
+// Hooks React
+export { useBugDetector, BugDetectorContext } from './hooks/useBugDetector';
 
 // Intelligence
 export { IntelligenceEngine } from './intelligence/IntelligenceEngine';

@@ -420,6 +420,15 @@ export interface UseBugDetectorProps extends BugDetectorConfig {
   autoActivateInDev?: boolean;
 }
 
+/** Estatísticas de bugs */
+export interface BugStats {
+  total: number;
+  pending: number;
+  resolved: number;
+  bySeverity: Record<BugReport['severity'], number>;
+  byType: Record<BugReport['type'], number>;
+}
+
 /** Retorno do hook useBugDetector */
 export interface UseBugDetectorReturn {
   /** Se está ativo */
@@ -434,10 +443,18 @@ export interface UseBugDetectorReturn {
   selectedElement: InspectedElement | null;
   /** Reports */
   reports: BugReport[];
+  /** Estatísticas */
+  stats: BugStats;
   /** Criar report */
   createReport: (data: CreateReportData) => Promise<BugReport>;
   /** Exportar report */
   exportReport: (reportId: string, options: ExportOptions) => Promise<ExportResult>;
+  /** Resolver report */
+  resolveReport: (id: string) => Promise<void>;
+  /** Deletar report */
+  deleteReport: (id: string) => Promise<void>;
+  /** Instância do detector */
+  detector: import('../core/BugDetector').BugDetector | null;
 }
 
 /** Dados para criar report */

@@ -1,9 +1,6 @@
 # 🐛 BugDetector Pro
 
-Ferramenta profissional de debug com IA para qualquer projeto web. Capture, analise e resolva bugs com a ajuda de 8 especialistas de IA.
-
-[![npm version](https://badge.fury.io/js/@auris%2Fbug-detector.svg)](https://www.npmjs.com/package/@auris/bug-detector)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Ferramenta profissional de debug com IA para qualquer projeto web. Capture, analise e resolva bugs com a ajuda de especialistas de IA.
 
 ## ✨ Features
 
@@ -36,21 +33,27 @@ pnpm add @auris/bug-detector
 ### React
 
 ```tsx
-import { useBugDetector } from '@auris/bug-detector/react';
+import { BugDetectorProvider, useBugDetector, BugDetectorFloatingButton } from '@auris/bug-detector/react';
 
 function App() {
-  const { activate, isActive } = useBugDetector({
-    ai: {
-      provider: 'gemini',
-      apiKey: process.env.GEMINI_API_KEY,
-    },
-    trigger: 'floating-button',
-  });
+  return (
+    <BugDetectorProvider config={{ autoActivateInDev: true }}>
+      <YourApp />
+      <BugDetectorFloatingButton />
+    </BugDetectorProvider>
+  );
+}
+
+function DebugControls() {
+  const { isActive, activate, deactivate, reports, stats } = useBugDetector();
 
   return (
-    <button onClick={activate}>
-      {isActive ? 'Desativar' : 'Ativar'} Debug
-    </button>
+    <div>
+      <button onClick={isActive ? deactivate : activate}>
+        {isActive ? 'Desativar' : 'Ativar'} Debug
+      </button>
+      <p>Total: {stats.total} | Pendentes: {stats.pending}</p>
+    </div>
   );
 }
 ```
@@ -105,15 +108,15 @@ const detector = new BugDetector({
   // Trigger
   trigger: 'floating-button', // 'floating-button' | 'keyboard-shortcut' | 'manual'
   shortcut: 'Ctrl+Shift+D',
-  
+
   // IA
   ai: {
-    provider: 'gemini', // 'gemini' | 'openai'
+    provider: 'gemini', // 'gemini' | 'openai' | 'none'
     apiKey: 'YOUR_API_KEY',
     model: 'gemini-pro',
     temperature: 0.3,
   },
-  
+
   // Captura
   capture: {
     screenshot: true,
@@ -121,10 +124,10 @@ const detector = new BugDetector({
     network: true,
     performance: true,
   },
-  
+
   // Persistência
   persistTo: 'localStorage', // 'localStorage' | 'indexedDB' | 'api' | 'none'
-  
+
   // Integrações
   integrations: {
     github: {
@@ -138,20 +141,80 @@ const detector = new BugDetector({
 });
 ```
 
-## 🧠 8 Especialistas de IA
+## 🧠 API do Hook (React)
 
-Cada bug é analisado por 8 especialistas:
+### `useBugDetector()`
 
-| Especialista | Foco |
-|--------------|------|
-| 🏗️ Arquiteto | Estrutura, Patterns |
-| 🎨 UI/UX | Acessibilidade, Design |
-| ⚡ Performance | Otimização |
-| 📘 TypeScript | Type Safety |
-| ⚛️ React | Hooks, Patterns |
-| 🎨 CSS/Tailwind | Estilos |
-| 🧪 Testing | QA, Edge Cases |
-| 🛠️ DX | Developer Experience |
+```typescript
+interface UseBugDetectorReturn {
+  isActive: boolean;
+  activate: () => void;
+  deactivate: () => void;
+  toggle: () => void;
+  selectedElement: InspectedElement | null;
+  reports: BugReport[];
+  stats: BugStats;
+  createReport: (data: CreateReportData) => Promise<BugReport>;
+  exportReport: (reportId: string, options: ExportOptions) => Promise<ExportResult>;
+  resolveReport: (id: string) => Promise<void>;
+  deleteReport: (id: string) => Promise<void>;
+}
+```
+
+### `useBugDetectorAdvanced()`
+
+```typescript
+const {
+  detector,
+  refreshReports,
+  analyzeWithAI,
+  createGitHubIssue,
+  notifySlack,
+  openPanel,
+  closePanel,
+  isPanelOpen,
+} = useBugDetectorAdvanced();
+```
+
+## 🎨 Componentes Visuais
+
+### `BugDetectorProvider`
+
+Envolve sua aplicação e gerencia o estado do bug detector.
+
+**Props:**
+- `config?: BugDetectorConfig` - Configuração opcional
+
+### `BugDetectorFloatingButton`
+
+Botão flutuante pronto para ativar/desativar.
+
+**Props:**
+- `position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'`
+- `color?: string`
+
+### `BugDetectorOverlay`
+
+Overlay de inspeção visual (renderizado automaticamente pelo Provider).
+
+### `BugReportModal`
+
+Modal de criação de reports (renderizado automaticamente pelo Provider).
+
+### `BugTrackerPanel`
+
+Painel lateral de listagem de reports (renderizado automaticamente pelo Provider).
+
+## 🧪 Testando no Navegador
+
+```javascript
+// Ativar via console
+window.dispatchEvent(new CustomEvent('aura-ativar-modo-edicao'));
+
+// Ou use o hook
+const { activate } = useBugDetector();
+activate();
+```
 
 ## 📄 Exportando Relatórios
 
@@ -162,14 +225,11 @@ const report = await detector.createReport({
 });
 
 // Exporta como Markdown
-const result = await detector.exportReport(report.id, { 
+const result = await detector.exportReport(report.id, {
   format: 'markdown',
   includeScreenshot: true,
   includeAIAnalysis: true,
 });
-
-// Download
-BugDetector.ReportGenerator.download(result);
 ```
 
 ## 🔗 Integrações
@@ -197,13 +257,6 @@ await detector.notifySlack(reportId, {
 });
 ```
 
-## 📚 Documentação
-
-- [Guia de Instalação](./docs/INSTALL.md)
-- [API Reference](./docs/API.md)
-- [Integrações](./docs/INTEGRATIONS.md)
-- [Exemplos](./docs/EXAMPLES.md)
-
 ## 🤝 Contribuindo
 
 1. Fork o projeto
@@ -214,7 +267,7 @@ await detector.notifySlack(reportId, {
 
 ## 📝 License
 
-Distribuído sob licença MIT. Veja [LICENSE](./LICENSE) para mais informações.
+Distribuído sob licença MIT.
 
 ---
 

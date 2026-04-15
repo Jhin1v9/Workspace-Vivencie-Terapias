@@ -1,19 +1,20 @@
 /**
  * React Adapter para BugDetector
- * Hook useBugDetector e Provider
+ * Provider, hook e componentes UI integrados
  */
 
-import { 
-  useEffect, 
-  useRef, 
-  useState, 
+import {
+  useEffect,
+  useRef,
+  useState,
   useCallback,
-  createContext,
-  useContext,
+  useMemo,
   type ReactNode,
 } from 'react';
 
 import { BugDetector } from '../core/BugDetector';
+import { BugDetectorContext, useBugDetector } from '../hooks/useBugDetector';
+import { BugDetectorOverlay, BugReportModal, BugTrackerPanel } from '../ui';
 import type {
   BugDetectorConfig,
   InspectedElement,
@@ -22,27 +23,10 @@ import type {
   ExportOptions,
   ExportResult,
   UseBugDetectorProps,
-  UseBugDetectorReturn,
 } from '../types';
 
-// ============================================================================
-// CONTEXT
-// ============================================================================
-
-interface BugDetectorContextValue extends UseBugDetectorReturn {
-  detector: BugDetector | null;
-}
-
-const BugDetectorContext = createContext<BugDetectorContextValue | null>(null);
-
-/** Hook para acessar o BugDetector no React */
-export function useBugDetector(): UseBugDetectorReturn {
-  const context = useContext(BugDetectorContext);
-  if (!context) {
-    throw new Error('useBugDetector deve ser usado dentro de BugDetectorProvider');
-  }
-  return context;
-}
+// Re-export hook para conveniência
+export { useBugDetector, BugDetectorContext };
 
 /** Provider do BugDetector */
 interface BugDetectorProviderProps {
@@ -50,19 +34,23 @@ interface BugDetectorProviderProps {
   config?: BugDetectorConfig;
 }
 
-export function BugDetectorProvider({ 
-  children, 
-  config = {} 
+export function BugDetectorProvider({
+  children,
+  config = {},
 }: BugDetectorProviderProps): JSX.Element {
   const detectorRef = useRef<BugDetector | null>(null);
   const [isActive, setIsActive] = useState(false);
   const [selectedElement, setSelectedElement] = useState<InspectedElement | null>(null);
   const [reports, setReports] = useState<BugReport[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [screenshotDataUrl, setScreenshotDataUrl] = useState<string | null>(null);
 
-  // Inicializa detector
+  // Inicializa detector em modo headless (UI controlada pelo React)
   useEffect(() => {
     detectorRef.current = new BugDetector({
       ...config,
+      headless: true,
       callbacks: {
         ...config.callbacks,
         onActivate: () => {
@@ -72,6 +60,7 @@ export function BugDetectorProvider({
         onDeactivate: () => {
           setIsActive(false);
           setSelectedElement(null);
+          setIsModalOpen(false);
           config.callbacks?.onDeactivate?.();
         },
         onElementSelected: (element) => {
@@ -79,13 +68,14 @@ export function BugDetectorProvider({
           config.callbacks?.onElementSelected?.(element);
         },
         onReportCreated: (report) => {
-          setReports(prev => [...prev, report]);
+          setReports((prev) => [...prev, report]);
           config.callbacks?.onReportCreated?.(report);
         },
       },
     });
 
-    // Auto-ativa em desenvolvimento
+    setReports(detectorRef.current.getReports());
+
     if (config.autoActivateInDev && typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
       detectorRef.current.activate();
     }
@@ -95,136 +85,31 @@ export function BugDetectorProvider({
     };
   }, []);
 
-  // Ações
-  const activate = useCallback(() => {
-    detectorRef.current?.activate();
-  }, []);
-
-  const deactivate = useCallback(() => {
-    detectorRef.current?.deactivate();
-  }, []);
-
-  const toggle = useCallback(() => {
-    detectorRef.current?.toggle();
-  }, []);
-
-  const createReport = useCallback(async (data: CreateReportData): Promise<BugReport> => {
-    if (!detectorRef.current) {
-      throw new Error('BugDetector não inicializado');
-    }
-    return detectorRef.current.createReport(data);
-  }, []);
-
-  const exportReport = useCallback(async (
-    reportId: string, 
-    options: ExportOptions
-  ): Promise<ExportResult> => {
-    if (!detectorRef.current) {
-      throw new Error('BugDetector não inicializado');
-    }
-    return detectorRef.current.exportReport(reportId, options);
-  }, []);
-
-  const value: BugDetectorContextValue = {
-    isActive,
-    activate,
-    deactivate,
-    toggle,
-    selectedElement,
-    reports,
-    createReport,
-    exportReport,
-    detector: detectorRef.current,
-  };
-
-  return (
-    <BugDetectorContext.Provider value={value}>
-      {children}
-    </BugDetectorContext.Provider>
-  );
-}
-
-// ============================================================================
-// HOOK AVANÇADO
-// ============================================================================
-
-/** Hook avançado com configuração completa */
-export function useBugDetectorAdvanced(
-  props: UseBugDetectorProps = {}
-): UseBugDetectorReturn & {
-  detector: BugDetector | null;
-  refreshReports: () => Promise<void>;
-  deleteReport: (id: string) => Promise<void>;
-  analyzeWithAI: (reportId: string) => Promise<void>;
-  createGitHubIssue: (reportId: string, repo?: string) => Promise<void>;
-  notifySlack: (reportId: string, channel?: string) => Promise<void>;
-} {
-  const detectorRef = useRef<BugDetector | null>(null);
-  const [isActive, setIsActive] = useState(false);
-  const [selectedElement, setSelectedElement] = useState<InspectedElement | null>(null);
-  const [reports, setReports] = useState<BugReport[]>([]);
-
+  // Keyboard shortcut
   useEffect(() => {
-    detectorRef.current = new BugDetector({
-      ...props,
-      callbacks: {
-        ...props.callbacks,
-        onActivate: () => {
-          setIsActive(true);
-          props.callbacks?.onActivate?.();
-        },
-        onDeactivate: () => {
-          setIsActive(false);
-          setSelectedElement(null);
-          props.callbacks?.onDeactivate?.();
-        },
-        onElementSelected: (element) => {
-          setSelectedElement(element);
-          props.callbacks?.onElementSelected?.(element);
-        },
-        onReportCreated: (report) => {
-          setReports(prev => [...prev, report]);
-          props.callbacks?.onReportCreated?.(report);
-        },
-      },
-    });
+    if (!config.shortcut) return;
 
-    // Carrega reports iniciais
-    setReports(detectorRef.current.getReports());
-
-    // Auto-ativa em desenvolvimento
-    if (props.autoActivateInDev && typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-      detectorRef.current.activate();
-    }
-
-    // Keyboard shortcut
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (props.shortcut) {
-        const keys = props.shortcut.toLowerCase().split('+');
-        const hasCtrl = keys.includes('ctrl') || keys.includes('control');
-        const hasShift = keys.includes('shift');
-        const hasAlt = keys.includes('alt');
-        const key = keys.find(k => !['ctrl', 'control', 'shift', 'alt'].includes(k));
+      const keys = config.shortcut!.toLowerCase().split('+');
+      const hasCtrl = keys.includes('ctrl') || keys.includes('control');
+      const hasShift = keys.includes('shift');
+      const hasAlt = keys.includes('alt');
+      const key = keys.find((k) => !['ctrl', 'control', 'shift', 'alt'].includes(k));
 
-        if (
-          e.ctrlKey === hasCtrl &&
-          e.shiftKey === hasShift &&
-          e.altKey === hasAlt &&
-          e.key.toLowerCase() === key
-        ) {
-          e.preventDefault();
-          detectorRef.current?.toggle();
-        }
+      if (
+        e.ctrlKey === hasCtrl &&
+        e.shiftKey === hasShift &&
+        e.altKey === hasAlt &&
+        e.key.toLowerCase() === key
+      ) {
+        e.preventDefault();
+        detectorRef.current?.toggle();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      detectorRef.current?.deactivate();
-    };
-  }, []);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [config.shortcut]);
 
   const activate = useCallback(() => detectorRef.current?.activate(), []);
   const deactivate = useCallback(() => detectorRef.current?.deactivate(), []);
@@ -232,7 +117,8 @@ export function useBugDetectorAdvanced(
 
   const createReport = useCallback(async (data: CreateReportData): Promise<BugReport> => {
     if (!detectorRef.current) throw new Error('BugDetector não inicializado');
-    return detectorRef.current.createReport(data);
+    const report = await detectorRef.current.createReport(data);
+    return report;
   }, []);
 
   const exportReport = useCallback(async (reportId: string, options: ExportOptions): Promise<ExportResult> => {
@@ -240,54 +126,98 @@ export function useBugDetectorAdvanced(
     return detectorRef.current.exportReport(reportId, options);
   }, []);
 
-  const refreshReports = useCallback(async () => {
+  const resolveReport = useCallback(async (id: string): Promise<void> => {
     if (!detectorRef.current) return;
+    await detectorRef.current.resolveReport(id);
     setReports(detectorRef.current.getReports());
   }, []);
 
-  const deleteReport = useCallback(async (id: string) => {
+  const deleteReport = useCallback(async (id: string): Promise<void> => {
     if (!detectorRef.current) return;
     await detectorRef.current.deleteReport(id);
-    setReports(prev => prev.filter(r => r.id !== id));
+    setReports(detectorRef.current.getReports());
   }, []);
 
-  const analyzeWithAI = useCallback(async (reportId: string) => {
-    if (!detectorRef.current) return;
-    await detectorRef.current.analyzeReport(reportId);
-    await refreshReports();
-  }, [refreshReports]);
+  const stats = useMemo(() => {
+    return detectorRef.current?.getStats() ?? {
+      total: 0, pending: 0, resolved: 0,
+      bySeverity: { low: 0, medium: 0, high: 0, critical: 0 },
+      byType: { bug: 0, improvement: 0, question: 0 },
+    };
+  }, [reports]);
 
-  const createGitHubIssue = useCallback(async (reportId: string, repo?: string) => {
-    if (!detectorRef.current) return;
-    await detectorRef.current.createGitHubIssue(reportId, repo);
+  const handleElementClick = useCallback(async (element: InspectedElement) => {
+    setSelectedElement(element);
+    // Captura screenshot simples
+    try {
+      const canvas = await import('html2canvas').then((m) => m.default);
+      const c = await canvas(document.body, {
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        scale: 1,
+      });
+      setScreenshotDataUrl(c.toDataURL('image/png'));
+    } catch {
+      setScreenshotDataUrl(null);
+    }
+    setIsModalOpen(true);
   }, []);
 
-  const notifySlack = useCallback(async (reportId: string, channel?: string) => {
-    if (!detectorRef.current) return;
-    await detectorRef.current.notifySlack(reportId, channel);
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedElement(null);
   }, []);
 
-  return {
+  const value = {
     isActive,
     activate,
     deactivate,
     toggle,
     selectedElement,
     reports,
+    stats,
     createReport,
     exportReport,
-    detector: detectorRef.current,
-    refreshReports,
+    resolveReport,
     deleteReport,
-    analyzeWithAI,
-    createGitHubIssue,
-    notifySlack,
+    detector: detectorRef.current,
   };
-}
 
-// ============================================================================
-// COMPONENTES UI
-// ============================================================================
+  const showUI = !config.headless;
+
+  return (
+    <BugDetectorContext.Provider value={value}>
+      {children}
+      {showUI && (
+        <>
+          <BugDetectorOverlay
+            isActive={isActive}
+            selectedElement={selectedElement}
+            onDeactivate={deactivate}
+            reportCount={reports.length}
+            onElementClick={handleElementClick}
+          />
+          <BugReportModal
+            isOpen={isModalOpen}
+            element={selectedElement}
+            screenshotDataUrl={screenshotDataUrl}
+            onClose={handleModalClose}
+            onSubmit={createReport}
+          />
+          <BugTrackerPanel
+            isOpen={isPanelOpen}
+            reports={reports}
+            stats={stats}
+            onClose={() => setIsPanelOpen(false)}
+            onResolve={resolveReport}
+            onDelete={deleteReport}
+          />
+        </>
+      )}
+    </BugDetectorContext.Provider>
+  );
+}
 
 /** Botão flutuante para ativar o BugDetector */
 interface FloatingButtonProps {
@@ -295,13 +225,13 @@ interface FloatingButtonProps {
   color?: string;
 }
 
-export function BugDetectorFloatingButton({ 
+export function BugDetectorFloatingButton({
   position = 'bottom-right',
-  color = '#3b82f6'
+  color = '#3b82f6',
 }: FloatingButtonProps): JSX.Element {
   const { isActive, toggle } = useBugDetector();
 
-  const positionStyles = {
+  const positionStyles: Record<string, React.CSSProperties> = {
     'top-left': { top: 20, left: 20 },
     'top-right': { top: 20, right: 20 },
     'bottom-left': { bottom: 20, left: 20 },
@@ -330,10 +260,68 @@ export function BugDetectorFloatingButton({
         transition: 'all 0.2s',
       }}
       title={isActive ? 'Desativar Debug' : 'Ativar Debug'}
+      aria-label={isActive ? 'Desativar Debug' : 'Ativar Debug'}
     >
       {isActive ? '✕' : '🐛'}
     </button>
   );
+}
+
+/** Hook avançado com configuração completa */
+export function useBugDetectorAdvanced(
+  props: UseBugDetectorProps = {}
+): ReturnType<typeof useBugDetector> & {
+  detector: BugDetector | null;
+  refreshReports: () => Promise<void>;
+  analyzeWithAI: (reportId: string) => Promise<void>;
+  createGitHubIssue: (reportId: string, repo?: string) => Promise<void>;
+  notifySlack: (reportId: string, channel?: string) => Promise<void>;
+  openPanel: () => void;
+  closePanel: () => void;
+  isPanelOpen: boolean;
+} {
+  const base = useBugDetector();
+  const [localReports, setLocalReports] = useState<BugReport[]>(base.reports);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const detectorRef = useRef<BugDetector | null>(base.detector);
+
+  useEffect(() => {
+    detectorRef.current = base.detector;
+  }, [base.detector]);
+
+  const refreshReports = useCallback(async () => {
+    if (!detectorRef.current) return;
+    setLocalReports(detectorRef.current.getReports());
+  }, []);
+
+  const analyzeWithAI = useCallback(async (reportId: string) => {
+    if (!detectorRef.current) return;
+    await detectorRef.current.analyzeReport(reportId);
+    await refreshReports();
+  }, [refreshReports]);
+
+  const createGitHubIssue = useCallback(async (reportId: string, repo?: string) => {
+    if (!detectorRef.current) return;
+    await detectorRef.current.createGitHubIssue(reportId, repo);
+  }, []);
+
+  const notifySlack = useCallback(async (reportId: string, channel?: string) => {
+    if (!detectorRef.current) return;
+    await detectorRef.current.notifySlack(reportId, channel);
+  }, []);
+
+  return {
+    ...base,
+    reports: localReports.length > 0 ? localReports : base.reports,
+    detector: detectorRef.current,
+    refreshReports,
+    analyzeWithAI,
+    createGitHubIssue,
+    notifySlack,
+    openPanel: () => setIsPanelOpen(true),
+    closePanel: () => setIsPanelOpen(false),
+    isPanelOpen,
+  };
 }
 
 export default useBugDetector;

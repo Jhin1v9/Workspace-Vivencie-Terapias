@@ -3,21 +3,22 @@
  */
 
 // React
-export { 
-  useBugDetector, 
+export {
+  useBugDetector,
   useBugDetectorAdvanced,
   BugDetectorProvider,
-  BugDetectorFloatingButton 
+  BugDetectorFloatingButton,
+  BugDetectorContext,
 } from './react';
 
 // Vue
-export { 
-  createBugDetector, 
-  useBugDetector as useBugDetectorVue 
+export {
+  createBugDetector,
+  useBugDetector as useBugDetectorVue,
 } from './vue';
 
 // Vanilla JS
-export { 
+export {
   BugDetectorAPI,
   initBugDetector,
   getBugDetector,
@@ -31,8 +32,5 @@ export {
   exportReport,
   createFloatingButton,
   autoInit,
-  extendElements
+  extendElements,
 } from './vanilla';
-
-// Angular (placeholder - implementar quando necessário)
-// export { BugDetectorModule, BugDetectorService } from './angular';

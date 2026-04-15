@@ -7,6 +7,7 @@ import type {
   BugDetectorConfig,
   InspectedElement,
   BugReport,
+  BugStats,
   CreateReportData,
   ExportOptions,
   ExportResult,
@@ -230,6 +231,32 @@ export class BugDetector {
 
     this.reports[index] = { ...this.reports[index], ...updates };
     await this.storage.update(id, updates);
+  }
+
+  /** Resolve report */
+  async resolveReport(id: string): Promise<void> {
+    await this.updateReport(id, { status: 'resolved' });
+  }
+
+  /** Obtém estatísticas */
+  getStats(): BugStats {
+    const total = this.reports.length;
+    const pending = this.reports.filter(r => r.status === 'pending' || r.status === 'analyzing').length;
+    const resolved = this.reports.filter(r => r.status === 'resolved' || r.status === 'rejected').length;
+
+    const bySeverity: Record<BugReport['severity'], number> = {
+      low: 0, medium: 0, high: 0, critical: 0,
+    };
+    const byType: Record<BugReport['type'], number> = {
+      bug: 0, improvement: 0, question: 0,
+    };
+
+    this.reports.forEach(r => {
+      bySeverity[r.severity]++;
+      byType[r.type]++;
+    });
+
+    return { total, pending, resolved, bySeverity, byType };
   }
 
   // ============================================================================
