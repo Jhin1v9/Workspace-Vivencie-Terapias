@@ -135,7 +135,7 @@ export const ScreenshotAnnotationCanvas: React.FC<ScreenshotAnnotationCanvasProp
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[11000] flex flex-col bg-slate-950">
+    <div className="fixed inset-0 z-[11000] flex flex-col bg-slate-950" data-bug-detector-ui>
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-900">
         <div className="flex items-center gap-4">

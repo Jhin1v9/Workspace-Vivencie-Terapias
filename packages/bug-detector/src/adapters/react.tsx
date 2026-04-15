@@ -192,7 +192,7 @@ export function BugDetectorProvider({
       {showUI && (
         <>
           <BugDetectorOverlay
-            isActive={isActive}
+            isActive={isActive && !isModalOpen}
             selectedElement={selectedElement}
             onDeactivate={deactivate}
             reportCount={reports.length}
