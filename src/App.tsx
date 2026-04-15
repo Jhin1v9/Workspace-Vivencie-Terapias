@@ -1,4 +1,3 @@
-import { useBugDetector } from '../packages/bug-detector/src/adapters/react';
 import React, { Suspense } from 'react';
 import { Desktop } from '@/components/os/Desktop';
 import { Toaster } from '@/components/ui/sonner';
@@ -10,11 +9,7 @@ const AudioPlayerFloat = React.lazy(() =>
 );
 
 function App() {
-  const { activate, isActive } = useBugDetector({
-    ai: { enabled: false }, // Offline mode
-    trigger: 'floating-button',
-});
-  // Inicializa listeners de eventos do bug tracker
+  // Inicializa listeners de eventos do bug tracker nativo
   useBugTrackerEvents();
   
   return (

@@ -9,7 +9,6 @@ import type {
   AIConfig, 
   PersonalityAnalysis, 
   PersonalityType,
-  ChatMessage,
 } from '../types';
 
 import { RateLimiter } from '../utils/RateLimiter';
@@ -298,7 +297,7 @@ Contexto adicional:
 - Estilos computados: ${JSON.stringify(report.element.computedStyles, null, 2)}`;
   }
 
-  private buildConsolidationPrompt(report: BugReport, analyses: PersonalityAnalysis[]): string {
+  private buildConsolidationPrompt(_report: BugReport, analyses: PersonalityAnalysis[]): string {
     return `Consolide as seguintes análises de especialistas em um diagnóstico único:
 
 ANÁLISES:
@@ -339,7 +338,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
   // FALLBACKS
   // ============================================================================
 
-  private createFallbackAnalysis(personality: PersonalityType, rawResponse: string): PersonalityAnalysis {
+  private createFallbackAnalysis(personality: PersonalityType, _rawResponse: string): PersonalityAnalysis {
     const defaults: Record<PersonalityType, PersonalityAnalysis> = {
       architect: {
         personality: 'architect',

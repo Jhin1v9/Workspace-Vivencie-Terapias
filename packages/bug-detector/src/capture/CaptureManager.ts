@@ -25,7 +25,7 @@ export class CaptureManager {
   private networkRequests: NetworkRequest[] = [];
   private originalConsole: Partial<typeof console> = {};
   private originalFetch: typeof fetch | null = null;
-  private originalXHR: typeof XMLHttpResponse | null = null;
+  private originalXHR: typeof XMLHttpRequest | null = null;
   
   // LIMITES PARA PREVENIR MEMORY LEAKS
   private readonly MAX_LOGS = 1000;

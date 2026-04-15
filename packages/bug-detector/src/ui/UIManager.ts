@@ -18,8 +18,8 @@ interface UIManagerCallbacks {
 export class UIManager {
   private callbacks: UIManagerCallbacks;
   private container: HTMLElement | null = null;
-  private isVisible = false;
-  private currentElement: InspectedElement | null = null;
+  private _isVisible = false;
+  private _currentElement: InspectedElement | null = null;
   private zIndexBase: number;
 
   constructor(callbacks: UIManagerCallbacks, zIndexBase: number = 999999) {
@@ -34,7 +34,7 @@ export class UIManager {
       this.createContainer();
     }
     this.container!.style.display = 'block';
-    this.isVisible = true;
+    this._isVisible = true;
     this.renderFloatingButton();
   }
 
@@ -43,12 +43,12 @@ export class UIManager {
     if (this.container) {
       this.container.style.display = 'none';
     }
-    this.isVisible = false;
+    this._isVisible = false;
   }
 
   /** Mostra modal de report */
   showReportModal(element: InspectedElement): void {
-    this.currentElement = element;
+    this._currentElement = element;
     this.renderReportModal(element);
   }
 
@@ -341,10 +341,8 @@ export class UIManager {
       const type = (modal.querySelector('.bd-type-btn.active') as HTMLElement)?.dataset.type as any;
       const severity = (modal.querySelector('.bd-severity') as HTMLSelectElement)?.value as any;
       const expectedBehavior = (modal.querySelector('.bd-expected') as HTMLTextAreaElement)?.value;
-      const includeScreenshot = (modal.querySelector('.bd-screenshot') as HTMLInputElement)?.checked;
-
       try {
-        const report = await this.callbacks.onCreateReport({
+        await this.callbacks.onCreateReport({
           description,
           type,
           severity,

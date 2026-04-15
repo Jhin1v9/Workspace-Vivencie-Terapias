@@ -7,7 +7,7 @@ import type { InspectedElement, ParentInfo } from '../types';
 
 /** Classe Inspector */
 export class Inspector {
-  private highlightedElement: HTMLElement | null = null;
+  private _highlightedElement: HTMLElement | null = null;
   private highlightOverlay: HTMLElement | null = null;
   private isActive = false;
   private onElementSelect: ((element: InspectedElement) => void) | null = null;
@@ -240,7 +240,7 @@ export class Inspector {
     `;
 
     document.body.appendChild(this.highlightOverlay);
-    this.highlightedElement = element;
+    this._highlightedElement = element;
   }
 
   private removeHighlight(): void {
@@ -248,7 +248,7 @@ export class Inspector {
       this.highlightOverlay.remove();
       this.highlightOverlay = null;
     }
-    this.highlightedElement = null;
+    this._highlightedElement = null;
   }
 
   private createInspectedElement(element: Element): InspectedElement {

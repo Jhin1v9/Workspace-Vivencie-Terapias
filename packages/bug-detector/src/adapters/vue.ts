@@ -60,11 +60,11 @@ export function createBugDetector(config: VueBugDetectorConfig = {}) {
 
 export interface BugDetectorComposable {
   /** Se está ativo */
-  isActive: Readonly<Ref<boolean>>;
+  isActive: Ref<boolean>;
   /** Elemento selecionado */
-  selectedElement: Readonly<Ref<InspectedElement | null>>;
+  selectedElement: Ref<InspectedElement | null>;
   /** Reports */
-  reports: Readonly<Ref<BugReport[]>>;
+  reports: Ref<BugReport[]>;
   /** Ativar */
   activate: () => void;
   /** Desativar */
@@ -102,9 +102,9 @@ function createComposable(detector: BugDetector): BugDetectorComposable {
   };
 
   return {
-    isActive: readonly(isActive),
-    selectedElement: readonly(selectedElement),
-    reports: readonly(reports),
+    isActive,
+    selectedElement,
+    reports,
 
     activate: () => {
       detector.activate();

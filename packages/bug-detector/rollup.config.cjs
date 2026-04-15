@@ -3,9 +3,24 @@ const commonjs = require('@rollup/plugin-commonjs');
 const typescript = require('@rollup/plugin-typescript');
 const peerDepsExternal = require('rollup-plugin-peer-deps-external');
 const postcss = require('rollup-plugin-postcss');
-const dts = require('rollup-plugin-dts');
 
 const packageJson = require('./package.json');
+
+const commonPlugins = [
+  peerDepsExternal(),
+  resolve(),
+  commonjs(),
+  typescript({
+    tsconfig: './tsconfig.json',
+    exclude: ['**/*.test.ts'],
+  }),
+  postcss({
+    extract: true,
+    minimize: true,
+  }),
+];
+
+const commonExternal = ['react', 'react-dom', 'html2canvas', 'vue'];
 
 module.exports = [
   // Build principal (CJS + ESM)
@@ -24,21 +39,37 @@ module.exports = [
         sourcemap: true,
       },
     ],
-    plugins: [
-      peerDepsExternal(),
-      resolve(),
-      commonjs(),
-      typescript({ 
-        tsconfig: './tsconfig.json',
-        exclude: ['**/*.test.ts'],
-      }),
-      postcss({
-        extract: true,
-        minimize: true,
-      }),
-    ],
-    external: ['react', 'react-dom', 'html2canvas', 'uuid'],
+    plugins: commonPlugins,
+    external: commonExternal,
   },
-  // Type definitions (já gerados pelo TypeScript, só copiamos o principal)
-  // Os arquivos .d.ts são gerados pelo @rollup/plugin-typescript em dist/
+  // React adapter
+  {
+    input: 'src/adapters/react.tsx',
+    output: [
+      {
+        file: 'dist/adapters/react.js',
+        format: 'esm',
+        sourcemap: true,
+        exports: 'named',
+        inlineDynamicImports: true,
+      },
+    ],
+    plugins: commonPlugins,
+    external: commonExternal,
+  },
+  // Vue adapter
+  {
+    input: 'src/adapters/vue.ts',
+    output: [
+      {
+        file: 'dist/adapters/vue.js',
+        format: 'esm',
+        sourcemap: true,
+        exports: 'named',
+        inlineDynamicImports: true,
+      },
+    ],
+    plugins: commonPlugins,
+    external: commonExternal,
+  },
 ];

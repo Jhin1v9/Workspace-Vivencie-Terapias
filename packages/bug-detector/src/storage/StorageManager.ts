@@ -7,11 +7,11 @@ import type { BugReport, StorageAdapter, ReportFilters } from '../types';
 
 /** Classe StorageManager */
 export class StorageManager implements StorageAdapter {
-  private method: 'localStorage' | 'indexedDB' | 'api' | 'none';
+
   private adapter: StorageAdapter;
 
   constructor(method: 'localStorage' | 'indexedDB' | 'api' | 'none' = 'localStorage') {
-    this.method = method;
+
     this.adapter = this.createAdapter(method);
   }
 

@@ -40,15 +40,36 @@
     "url": "https://github.com/auris-team/bug-detector/issues"
   },
   "homepage": "https://github.com/auris-team/bug-detector#readme",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./react": {
+      "import": "./dist/adapters/react.js",
+      "require": "./dist/adapters/react.js",
+      "types": "./dist/adapters/react.d.ts"
+    },
+    "./vue": {
+      "import": "./dist/adapters/vue.js",
+      "require": "./dist/adapters/vue.js",
+      "types": "./dist/adapters/vue.d.ts"
+    }
+  },
   "peerDependencies": {
     "react": ">=16.8.0",
-    "react-dom": ">=16.8.0"
+    "react-dom": ">=16.8.0",
+    "vue": ">=3.0.0"
   },
   "peerDependenciesMeta": {
     "react": {
       "optional": true
     },
     "react-dom": {
+      "optional": true
+    },
+    "vue": {
       "optional": true
     }
   },
@@ -59,6 +80,7 @@
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.0.0",
     "@rollup/plugin-typescript": "^11.0.0",
+    "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@types/uuid": "^9.0.0",
@@ -67,6 +89,7 @@
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-postcss": "^4.0.2",
     "typescript": "^5.0.0",
-    "vitest": "^1.0.0"
+    "vitest": "^1.0.0",
+    "vue": "^3.4.0"
   }
 }

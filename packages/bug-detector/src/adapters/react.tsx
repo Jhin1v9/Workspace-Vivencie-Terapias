@@ -3,7 +3,7 @@
  * Hook useBugDetector e Provider
  */
 
-import React, { 
+import { 
   useEffect, 
   useRef, 
   useState, 
@@ -86,7 +86,7 @@ export function BugDetectorProvider({
     });
 
     // Auto-ativa em desenvolvimento
-    if (config.autoActivateInDev && process.env.NODE_ENV === 'development') {
+    if (config.autoActivateInDev && typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
       detectorRef.current.activate();
     }
 
@@ -193,7 +193,7 @@ export function useBugDetectorAdvanced(
     setReports(detectorRef.current.getReports());
 
     // Auto-ativa em desenvolvimento
-    if (props.autoActivateInDev && process.env.NODE_ENV === 'development') {
+    if (props.autoActivateInDev && typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
       detectorRef.current.activate();
     }
 
