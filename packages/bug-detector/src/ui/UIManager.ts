@@ -72,6 +72,7 @@ export class UIManager {
   private createContainer(): void {
     this.container = document.createElement('div');
     this.container.id = 'bug-detector-ui';
+    this.container.setAttribute('data-bug-detector-ui', '');
     this.container.style.cssText = `
       position: fixed;
       top: 0;

@@ -1716,6 +1716,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
         createContainer() {
             this.container = document.createElement('div');
             this.container.id = 'bug-detector-ui';
+            this.container.setAttribute('data-bug-detector-ui', '');
             this.container.style.cssText = `
       position: fixed;
       top: 0;
