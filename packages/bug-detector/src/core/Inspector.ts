@@ -221,12 +221,15 @@ export class Inspector {
 
   private handleClick = (e: MouseEvent): void => {
     if (!this.isActive) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
 
     const target = e.target as HTMLElement;
-    if (!target || target === this.highlightOverlay) return;
+    // Permite interação normal dentro da UI do bug-detector (modal, botões, etc.)
+    if (!target || target === this.highlightOverlay || target.closest('[data-bug-detector-ui]')) {
+      return;
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
 
     const inspected = this.createInspectedElement(target);
     this.onElementSelect?.(inspected);

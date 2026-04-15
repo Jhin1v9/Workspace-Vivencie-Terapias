@@ -166,13 +166,23 @@ export class CaptureManager {
       info: console.info,
     };
 
+    // Helper seguro para serializar argumentos do console
+    const safeStringify = (arg: unknown): string => {
+      if (arg === null) return 'null';
+      if (arg === undefined) return 'undefined';
+      if (typeof arg !== 'object') return String(arg).slice(0, 1000);
+      try {
+        return JSON.stringify(arg).slice(0, 1000);
+      } catch {
+        return '[Object]';
+      }
+    };
+
     // Sobrescreve com LIMITAÇÃO DE MEMÓRIA (FIFO)
     const captureLog = (level: ConsoleLog['type'], ...args: unknown[]) => {
       const log: ConsoleLog = {
         type: level,
-        message: args.map(arg => 
-          typeof arg === 'object' ? JSON.stringify(arg).slice(0, 1000) : String(arg).slice(0, 1000)
-        ).join(' '),
+        message: args.map(arg => safeStringify(arg)).join(' '),
         timestamp: new Date().toISOString(),
         stack: level === 'error' ? new Error().stack?.slice(0, 2000) : undefined,
       };
