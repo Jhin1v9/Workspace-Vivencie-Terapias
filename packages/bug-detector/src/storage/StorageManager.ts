@@ -67,11 +67,11 @@ export class StorageManager implements StorageAdapter {
     }
 
     if (filters.dateFrom) {
-      reports = reports.filter(r => r.timestamp >= filters.dateFrom!.getTime());
+      reports = reports.filter(r => new Date(r.timestamp).getTime() >= filters.dateFrom!.getTime());
     }
 
     if (filters.dateTo) {
-      reports = reports.filter(r => r.timestamp <= filters.dateTo!.getTime());
+      reports = reports.filter(r => new Date(r.timestamp).getTime() <= filters.dateTo!.getTime());
     }
 
     if (filters.search) {
@@ -139,7 +139,7 @@ class LocalStorageAdapter implements StorageAdapter {
       }
     }
 
-    return reports.sort((a, b) => b.timestamp - a.timestamp);
+    return reports.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
 
   async delete(id: string): Promise<void> {

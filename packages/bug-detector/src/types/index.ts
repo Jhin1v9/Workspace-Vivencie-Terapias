@@ -167,7 +167,7 @@ export interface BugReport {
   /** ID único */
   id: string;
   /** Timestamp de criação */
-  timestamp: number;
+  timestamp: string;
   /** Status */
   status: 'pending' | 'analyzing' | 'resolved' | 'rejected';
   
@@ -347,7 +347,7 @@ export interface ChatMessage {
   id: string;
   sender: 'user' | 'ai' | 'system' | PersonalityType;
   content: string;
-  timestamp: number;
+  timestamp: string;
   type: 'text' | 'analysis' | 'code' | 'error';
   metadata?: {
     analysis?: PersonalityAnalysis;

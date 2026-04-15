@@ -173,7 +173,7 @@ export class BugDetector {
     // Cria report
     const report: BugReport = {
       id: crypto.randomUUID(),
-      timestamp: Date.now(),
+      timestamp: new Date().toISOString(),
       status: 'pending',
       url: window.location.href,
       pageTitle: document.title,
@@ -193,9 +193,10 @@ export class BugDetector {
       expectedBehavior: data.expectedBehavior,
     };
 
-    // Salva
+    // Salva (sanitiza domElement para storage)
     this.reports.push(report);
-    await this.storage.save(report);
+    const { domElement, ...elementWithoutDom } = report.element;
+    await this.storage.save({ ...report, element: elementWithoutDom as InspectedElement });
 
     // Callback
     this.onReportCreated?.(report);
@@ -301,7 +302,7 @@ export class BugDetector {
           id: crypto.randomUUID(),
           sender: 'ai',
           content: 'Olá! Descreva o bug que você encontrou e vou analisar com meus especialistas.',
-          timestamp: Date.now(),
+          timestamp: new Date().toISOString(),
           type: 'text',
         },
       ],
@@ -322,7 +323,7 @@ export class BugDetector {
       id: crypto.randomUUID(),
       sender: 'user',
       content,
-      timestamp: Date.now(),
+      timestamp: new Date().toISOString(),
       type: 'text',
     };
     session.messages.push(userMessage);
@@ -342,7 +343,7 @@ export class BugDetector {
       id: crypto.randomUUID(),
       sender: 'ai',
       content: aiResponse.content,
-      timestamp: Date.now(),
+      timestamp: new Date().toISOString(),
       type: aiResponse.type,
       metadata: aiResponse.metadata,
     };
