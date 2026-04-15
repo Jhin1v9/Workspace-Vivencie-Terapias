@@ -5,6 +5,7 @@
 
 import React, { useMemo, useState } from 'react';
 import type { BugReport, BugStats } from '../types';
+import { SessionReplayPlayer } from '../replay/SessionReplayPlayer';
 
 interface BugTrackerPanelProps {
   isOpen: boolean;
@@ -41,6 +42,7 @@ export const BugTrackerPanel: React.FC<BugTrackerPanelProps> = ({
   const [filter, setFilter] = useState<TabFilter>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const filteredReports = useMemo(() => {
     if (filter === 'all') return reports;
@@ -170,6 +172,53 @@ export const BugTrackerPanel: React.FC<BugTrackerPanelProps> = ({
                     {deletingId === report.id ? '...' : '🗑'}
                   </button>
                 </div>
+              </div>
+
+              {/* Expand/collapse details */}
+              <div className="mt-3 pt-3 border-t border-slate-700/50">
+                <button
+                  onClick={() => setExpandedId(expandedId === report.id ? null : report.id)}
+                  className="text-xs text-cyan-400 hover:text-cyan-300"
+                >
+                  {expandedId === report.id ? '▲ Ocultar detalhes' : '▼ Ver detalhes'}
+                </button>
+
+                {expandedId === report.id && (
+                  <div className="mt-3 space-y-3">
+                    {report.screenshot && (
+                      <div>
+                        <p className="text-[10px] uppercase text-slate-500 mb-1">Screenshot</p>
+                        <img
+                          src={report.screenshot}
+                          alt="Screenshot"
+                          className="w-full h-32 object-cover rounded-lg border border-slate-700"
+                        />
+                      </div>
+                    )}
+                    {report.video && (
+                      <div>
+                        <p className="text-[10px] uppercase text-slate-500 mb-1">Vídeo</p>
+                        <video
+                          src={report.video}
+                          controls
+                          className="w-full h-32 rounded-lg bg-black border border-slate-700"
+                        />
+                      </div>
+                    )}
+                    {report.sessionReplay && report.sessionReplay.events.length > 0 && (
+                      <div>
+                        <p className="text-[10px] uppercase text-slate-500 mb-1">Session Replay</p>
+                        <SessionReplayPlayer data={report.sessionReplay} width={280} height={160} />
+                      </div>
+                    )}
+                    {report.aiAnalysis && (
+                      <div className="p-3 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                        <p className="text-[10px] uppercase text-slate-500 mb-1">Análise IA</p>
+                        <p className="text-xs text-slate-300">{report.aiAnalysis.rootCause}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ))

@@ -23,6 +23,7 @@ import { CaptureManager } from '../capture/CaptureManager';
 import { IntelligenceEngine } from '../intelligence/IntelligenceEngine';
 import { ReportGenerator } from '../intelligence/ReportGenerator';
 import { UIManager } from '../ui/UIManager';
+import { SessionReplayEngine } from '../replay/SessionReplayEngine';
 // UUID nativo - sem dependência externa
 
 /** Classe principal BugDetector */
@@ -37,6 +38,7 @@ export class BugDetector {
   private currentElement: InspectedElement | null = null;
   private reports: BugReport[] = [];
   private chatSessions: Map<string, ChatSession> = new Map();
+  private sessionReplay: SessionReplayEngine;
 
   /** Event callbacks */
   private onActivate?: () => void;
@@ -50,6 +52,7 @@ export class BugDetector {
     this.storage = new StorageManager(this.config.getPersistMethod());
     this.capture = new CaptureManager(this.config.getCapture());
     this.intelligence = new IntelligenceEngine(this.config.getAI());
+    this.sessionReplay = new SessionReplayEngine();
 
     // Setup callbacks
     const callbacks = this.config.get().callbacks;
@@ -82,7 +85,10 @@ export class BugDetector {
     if (this.isActive) return;
 
     this.isActive = true;
-    
+
+    // Inicia session replay
+    this.sessionReplay.start();
+
     // Ativa inspeção
     this.inspector.activate(
       (element) => this.handleElementSelect(element),
@@ -102,6 +108,9 @@ export class BugDetector {
 
     this.isActive = false;
     this.currentElement = null;
+
+    // Para session replay
+    this.sessionReplay.stop();
 
     // Desativa inspeção
     this.inspector.deactivate();
@@ -185,6 +194,7 @@ export class BugDetector {
       element,
       screenshot: data.screenshot || captures.screenshot,
       video: data.video,
+      sessionReplay: data.sessionReplay || this.sessionReplay.getSnapshot(),
       consoleLogs: captures.consoleLogs,
       networkRequests: captures.networkRequests,
       performanceMetrics: captures.performanceMetrics,

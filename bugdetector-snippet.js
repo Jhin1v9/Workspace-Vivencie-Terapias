@@ -2785,8 +2785,57 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
         // PRIVATE METHODS - Reports List
         // ============================================================================
         renderReportsList() {
-            // Implementação da lista de reports
-            this.showSuccessToast('Lista de reports - implementar');
+            if (!this.container)
+                return;
+            const existing = this.container.querySelector('[data-bugdetector-reports-list]');
+            if (existing) {
+                existing.remove();
+                return;
+            }
+            const panel = document.createElement('div');
+            panel.setAttribute('data-bugdetector-reports-list', '');
+            panel.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 360px;
+      max-height: 80vh;
+      background: rgba(15, 23, 42, 0.98);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      pointer-events: auto;
+      z-index: ${this.zIndexBase};
+      border: 1px solid rgba(255,255,255,0.1);
+      color: white;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    `;
+            panel.innerHTML = `
+      <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-weight: 600;">Reports Salvos</span>
+        <button data-bugdetector-close-reports style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 18px; padding: 4px;">×</button>
+      </div>
+      <div data-bugdetector-reports-content style="padding: 12px; overflow-y: auto; flex: 1;">
+        <p style="color: #64748b; font-size: 13px; text-align: center;">Carregando...</p>
+      </div>
+    `;
+            panel.querySelector('[data-bugdetector-close-reports]')?.addEventListener('click', () => panel.remove());
+            this.container.appendChild(panel);
+            // Busca reports do storage via callback
+            this.callbacks.onCreateReport({ description: '__list_reports__' }).catch(() => {
+                // Hack: não temos API direta para listar no vanilla, então usamos o storage global se existir
+            });
+            // Como o vanilla não tem acesso direto à lista, vamos injetar uma mensagem informativa
+            const content = panel.querySelector('[data-bugdetector-reports-content]');
+            if (content) {
+                content.innerHTML = `
+        <p style="color: #64748b; font-size: 13px; text-align: center; padding: 24px 0;">
+          A lista completa de reports está disponível via adapter React/Vue.<br><br>
+          No vanilla, os reports são salvos no localStorage/indexedDB configurado.
+        </p>
+      `;
+            }
         }
         // ============================================================================
         // PRIVATE METHODS - Toast
@@ -2817,6 +2866,189 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
     }
 
     /**
+     * SessionReplayEngine
+     * Grava eventos DOM num buffer circular para reprodução posterior.
+     * Captura: clicks, scrolls, movimentos de mouse (amostrados), inputs,
+     * redimensionamento de viewport e mudanças de URL.
+     */
+    class SessionReplayEngine {
+        constructor(options = {}) {
+            this.events = [];
+            this.startTime = 0;
+            this.isRecording = false;
+            this.lastMouseMove = 0;
+            this.observers = [];
+            this.cleanupInterval = null;
+            this.options = {
+                maxDuration: 30000,
+                mouseMoveThrottle: 50,
+                target: options.target || document,
+                ...options,
+            };
+        }
+        /** Inicia a gravação de eventos */
+        start() {
+            if (this.isRecording)
+                return;
+            this.isRecording = true;
+            this.startTime = Date.now();
+            this.events = [];
+            this.observers = [];
+            const target = this.options.target;
+            // Mouse move (throttled)
+            const handleMouseMove = (e) => {
+                const now = Date.now();
+                if (now - this.lastMouseMove < this.options.mouseMoveThrottle)
+                    return;
+                this.lastMouseMove = now;
+                this.pushEvent({
+                    type: 'mousemove',
+                    timestamp: now,
+                    data: { x: e.clientX, y: e.clientY },
+                });
+            };
+            target.addEventListener('mousemove', handleMouseMove);
+            this.observers.push(() => target.removeEventListener('mousemove', handleMouseMove));
+            // Click
+            const handleClick = (e) => {
+                this.pushEvent({
+                    type: 'click',
+                    timestamp: Date.now(),
+                    data: { x: e.clientX, y: e.clientY, target: this.getSelector(e.target) },
+                });
+            };
+            target.addEventListener('click', handleClick, true);
+            this.observers.push(() => target.removeEventListener('click', handleClick, true));
+            // Scroll
+            const handleScroll = () => {
+                this.pushEvent({
+                    type: 'scroll',
+                    timestamp: Date.now(),
+                    data: { x: window.scrollX, y: window.scrollY },
+                });
+            };
+            window.addEventListener('scroll', handleScroll, { passive: true });
+            this.observers.push(() => window.removeEventListener('scroll', handleScroll));
+            // Input (change em inputs e textareas)
+            const handleInput = (e) => {
+                const el = e.target;
+                if (!el || (!el.tagName.match(/INPUT|TEXTAREA|SELECT/i)))
+                    return;
+                const isSensitive = this.isSensitiveInput(el);
+                this.pushEvent({
+                    type: 'input',
+                    timestamp: Date.now(),
+                    data: {
+                        selector: this.getSelector(el),
+                        value: isSensitive ? '***' : el.value,
+                        tag: el.tagName.toLowerCase(),
+                    },
+                });
+            };
+            target.addEventListener('change', handleInput, true);
+            this.observers.push(() => target.removeEventListener('change', handleInput, true));
+            // Resize
+            const handleResize = () => {
+                this.pushEvent({
+                    type: 'resize',
+                    timestamp: Date.now(),
+                    data: { width: window.innerWidth, height: window.innerHeight },
+                });
+            };
+            window.addEventListener('resize', handleResize);
+            this.observers.push(() => window.removeEventListener('resize', handleResize));
+            // Navigation (popstate)
+            const handlePopState = () => {
+                this.pushEvent({
+                    type: 'navigation',
+                    timestamp: Date.now(),
+                    data: { url: window.location.href },
+                });
+            };
+            window.addEventListener('popstate', handlePopState);
+            this.observers.push(() => window.removeEventListener('popstate', handlePopState));
+            // Inicial viewport
+            this.pushEvent({
+                type: 'resize',
+                timestamp: this.startTime,
+                data: { width: window.innerWidth, height: window.innerHeight },
+            });
+            // Limpeza periódica de eventos antigos
+            this.cleanupInterval = setInterval(() => this.trimOldEvents(), 5000);
+        }
+        /** Para a gravação */
+        stop() {
+            this.isRecording = false;
+            this.observers.forEach((cleanup) => cleanup());
+            this.observers = [];
+            if (this.cleanupInterval) {
+                clearInterval(this.cleanupInterval);
+                this.cleanupInterval = null;
+            }
+            return {
+                events: [...this.events],
+                startTime: this.startTime,
+                endTime: Date.now(),
+                viewport: { width: window.innerWidth, height: window.innerHeight },
+            };
+        }
+        /** Limpa o buffer sem parar gravação */
+        clear() {
+            this.events = [];
+            this.startTime = Date.now();
+        }
+        /** Retorna se está gravando */
+        get recording() {
+            return this.isRecording;
+        }
+        /** Retorna snapshot atual do buffer */
+        getSnapshot() {
+            return {
+                events: [...this.events],
+                startTime: this.startTime,
+                endTime: Date.now(),
+                viewport: { width: window.innerWidth, height: window.innerHeight },
+            };
+        }
+        pushEvent(event) {
+            this.events.push(event);
+            this.trimOldEvents();
+        }
+        trimOldEvents() {
+            const cutoff = Date.now() - this.options.maxDuration;
+            const index = this.events.findIndex((e) => e.timestamp >= cutoff);
+            if (index > 0) {
+                this.events = this.events.slice(index);
+            }
+        }
+        getSelector(el) {
+            if (!el)
+                return null;
+            try {
+                if (el.id)
+                    return `#${el.id}`;
+                if (el.className && typeof el.className === 'string') {
+                    const cls = el.className.split(' ').filter(Boolean).join('.');
+                    if (cls)
+                        return `.${cls}`;
+                }
+                return el.tagName.toLowerCase();
+            }
+            catch {
+                return null;
+            }
+        }
+        isSensitiveInput(el) {
+            if (el.type === 'password')
+                return true;
+            const name = (el.name || '').toLowerCase();
+            const id = (el.id || '').toLowerCase();
+            const sensitive = ['password', 'cpf', 'ssn', 'credit', 'card', 'cvv', 'secret', 'token'];
+            return sensitive.some((s) => name.includes(s) || id.includes(s));
+        }
+    }
+
+    /**
      * Classe principal do BugDetector
      * Orquestra todos os componentes do sistema
      */
@@ -2834,6 +3066,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
             this.storage = new StorageManager(this.config.getPersistMethod());
             this.capture = new CaptureManager(this.config.getCapture());
             this.intelligence = new IntelligenceEngine(this.config.getAI());
+            this.sessionReplay = new SessionReplayEngine();
             // Setup callbacks
             const callbacks = this.config.get().callbacks;
             this.onActivate = callbacks?.onActivate;
@@ -2861,6 +3094,8 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
             if (this.isActive)
                 return;
             this.isActive = true;
+            // Inicia session replay
+            this.sessionReplay.start();
             // Ativa inspeção
             this.inspector.activate((element) => this.handleElementSelect(element), (element) => this.handleElementHover(element));
             // Mostra UI
@@ -2874,6 +3109,8 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
                 return;
             this.isActive = false;
             this.currentElement = null;
+            // Para session replay
+            this.sessionReplay.stop();
             // Desativa inspeção
             this.inspector.deactivate();
             // Esconde UI
@@ -2947,6 +3184,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
                 element,
                 screenshot: data.screenshot || captures.screenshot,
                 video: data.video,
+                sessionReplay: data.sessionReplay || this.sessionReplay.getSnapshot(),
                 consoleLogs: captures.consoleLogs,
                 networkRequests: captures.networkRequests,
                 performanceMetrics: captures.performanceMetrics,

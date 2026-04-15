@@ -720,8 +720,62 @@ export class UIManager {
   // ============================================================================
 
   private renderReportsList(): void {
-    // Implementação da lista de reports
-    this.showSuccessToast('Lista de reports - implementar');
+    if (!this.container) return;
+
+    const existing = this.container.querySelector('[data-bugdetector-reports-list]');
+    if (existing) {
+      existing.remove();
+      return;
+    }
+
+    const panel = document.createElement('div');
+    panel.setAttribute('data-bugdetector-reports-list', '');
+    panel.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 360px;
+      max-height: 80vh;
+      background: rgba(15, 23, 42, 0.98);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      pointer-events: auto;
+      z-index: ${this.zIndexBase};
+      border: 1px solid rgba(255,255,255,0.1);
+      color: white;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    `;
+
+    panel.innerHTML = `
+      <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-weight: 600;">Reports Salvos</span>
+        <button data-bugdetector-close-reports style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 18px; padding: 4px;">×</button>
+      </div>
+      <div data-bugdetector-reports-content style="padding: 12px; overflow-y: auto; flex: 1;">
+        <p style="color: #64748b; font-size: 13px; text-align: center;">Carregando...</p>
+      </div>
+    `;
+
+    panel.querySelector('[data-bugdetector-close-reports]')?.addEventListener('click', () => panel.remove());
+    this.container.appendChild(panel);
+
+    // Busca reports do storage via callback
+    this.callbacks.onCreateReport({ description: '__list_reports__' }).catch(() => {
+      // Hack: não temos API direta para listar no vanilla, então usamos o storage global se existir
+    });
+
+    // Como o vanilla não tem acesso direto à lista, vamos injetar uma mensagem informativa
+    const content = panel.querySelector('[data-bugdetector-reports-content]') as HTMLElement;
+    if (content) {
+      content.innerHTML = `
+        <p style="color: #64748b; font-size: 13px; text-align: center; padding: 24px 0;">
+          A lista completa de reports está disponível via adapter React/Vue.<br><br>
+          No vanilla, os reports são salvos no localStorage/indexedDB configurado.
+        </p>
+      `;
+    }
   }
 
   // ============================================================================

@@ -190,6 +190,8 @@ export interface BugReport {
   screenshot?: string;
   /** Vídeo da tela em base64 */
   video?: string;
+  /** Session replay (eventos DOM dos últimos 30s) */
+  sessionReplay?: import('../replay').SessionReplayData;
   /** Logs do console */
   consoleLogs?: ConsoleLog[];
   /** Requisições de rede */
@@ -491,4 +493,5 @@ export interface CreateReportData {
   element?: InspectedElement;
   screenshot?: string;
   video?: string;
+  sessionReplay?: import('../replay').SessionReplayData;
 }
