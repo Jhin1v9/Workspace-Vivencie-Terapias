@@ -3,9 +3,10 @@
  * Modal para criação de reports de bug
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { InspectedElement, CreateReportData, BugReport } from '../types';
 import { ScreenshotAnnotationCanvas } from './ScreenshotAnnotationCanvas';
+import { ScreenRecorder } from '../capture/ScreenRecorder';
 
 interface BugReportModalProps {
   isOpen: boolean;
@@ -28,6 +29,12 @@ const severityLevels = [
   { id: 'low', label: 'Baixa', color: '#3b82f6' },
 ] as const;
 
+const formatTime = (ms: number): string => {
+  const seconds = Math.floor(ms / 1000);
+  const tenths = Math.floor((ms % 1000) / 100);
+  return `${seconds}.${tenths}s`;
+};
+
 export const BugReportModal: React.FC<BugReportModalProps> = ({
   isOpen,
   element,
@@ -43,6 +50,13 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnnotating, setIsAnnotating] = useState(false);
   const [annotatedScreenshotUrl, setAnnotatedScreenshotUrl] = useState<string | null>(null);
+
+  // Screen recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedVideo, setRecordedVideo] = useState<string | null>(null);
+  const [recordProgress, setRecordProgress] = useState(0);
+  const [recordError, setRecordError] = useState<string | null>(null);
+  const recorderRef = useRef<ScreenRecorder | null>(null);
 
   // Calcula retângulos sensíveis para blur automático
   const sensitiveRects = useMemo(() => {
@@ -60,16 +74,11 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
       });
     };
 
-    // Inputs de senha
     element.domElement.querySelectorAll('input[type="password"]').forEach(addRect);
-
-    // Inputs de dados sensíveis por nome
     const sensitiveNames = ['cpf', 'ssn', 'credit', 'card', 'cvv', 'password', 'secret'];
     sensitiveNames.forEach((name) => {
       element.domElement.querySelectorAll(`input[name*="${name}"], input[id*="${name}"]`).forEach(addRect);
     });
-
-    // Emails
     element.domElement.querySelectorAll('input[type="email"]').forEach(addRect);
 
     return rects;
@@ -88,6 +97,7 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
         expectedBehavior: expectedBehavior.trim() || undefined,
         element,
         screenshot: includeScreenshot ? (activeScreenshotUrl || undefined) : undefined,
+        video: recordedVideo || undefined,
       });
       // Reset
       setType('bug');
@@ -96,15 +106,23 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
       setExpectedBehavior('');
       setIncludeScreenshot(true);
       setAnnotatedScreenshotUrl(null);
+      setRecordedVideo(null);
+      setRecordError(null);
       onClose();
     } finally {
       setIsSubmitting(false);
     }
-  }, [description, element, expectedBehavior, onClose, onSubmit, severity, type, includeScreenshot, activeScreenshotUrl]);
+  }, [description, element, expectedBehavior, onClose, onSubmit, severity, type, includeScreenshot, activeScreenshotUrl, recordedVideo]);
 
   const handleClose = useCallback(() => {
     if (!isSubmitting) {
       setAnnotatedScreenshotUrl(null);
+      setRecordedVideo(null);
+      setRecordError(null);
+      if (recorderRef.current) {
+        recorderRef.current.cancel();
+        recorderRef.current = null;
+      }
       onClose();
     }
   }, [isSubmitting, onClose]);
@@ -116,6 +134,52 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
 
   const handleCancelAnnotation = useCallback(() => {
     setIsAnnotating(false);
+  }, []);
+
+  const handleStartRecording = useCallback(async () => {
+    setRecordError(null);
+    try {
+      recorderRef.current = new ScreenRecorder({
+        maxDuration: 10000,
+        onProgress: (elapsed) => setRecordProgress(elapsed),
+        onStop: async (blob) => {
+          setIsRecording(false);
+          setRecordProgress(0);
+          if (blob && blob.size > 0) {
+            const base64 = await ScreenRecorder.blobToBase64(blob);
+            setRecordedVideo(base64);
+          }
+        },
+        onError: (err) => {
+          setIsRecording(false);
+          setRecordProgress(0);
+          setRecordError(err.message);
+        },
+      });
+      setIsRecording(true);
+      await recorderRef.current.start();
+    } catch (err) {
+      setIsRecording(false);
+      setRecordError(err instanceof Error ? err.message : String(err));
+    }
+  }, []);
+
+  const handleStopRecording = useCallback(() => {
+    recorderRef.current?.stop();
+  }, []);
+
+  const handleRemoveVideo = useCallback(() => {
+    setRecordedVideo(null);
+  }, []);
+
+  // Limpa recorder ao desmontar
+  useEffect(() => {
+    return () => {
+      if (recorderRef.current) {
+        recorderRef.current.cancel();
+        recorderRef.current = null;
+      }
+    };
   }, []);
 
   if (!isOpen || !element) return null;
@@ -130,6 +194,8 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
       />
     );
   }
+
+  const canRecord = typeof window !== 'undefined' && ScreenRecorder.isSupported();
 
   return (
     <div
@@ -156,7 +222,7 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
           </div>
           <button
             onClick={handleClose}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isRecording}
             className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-50"
             aria-label="Fechar modal"
           >
@@ -313,6 +379,70 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
                 )}
               </div>
             )}
+
+            {/* Screen Recording */}
+            <div className="border-t border-slate-800 pt-4">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">
+                Gravação de Tela
+              </label>
+
+              {!canRecord && (
+                <p className="text-sm text-slate-500">
+                  Seu navegador não suporta gravação de tela.
+                </p>
+              )}
+
+              {canRecord && !recordedVideo && !isRecording && (
+                <button
+                  onClick={handleStartRecording}
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg border border-slate-600 transition-colors"
+                >
+                  <span>🔴</span>
+                  Gravar Tela (10s)
+                </button>
+              )}
+
+              {isRecording && (
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg border border-red-500/30">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                    </span>
+                    <span className="text-sm font-medium">Gravando… {formatTime(recordProgress)}</span>
+                  </div>
+                  <button
+                    onClick={handleStopRecording}
+                    className="px-3 py-1.5 text-sm bg-slate-700 hover:bg-slate-600 text-white rounded-md"
+                  >
+                    Parar
+                  </button>
+                </div>
+              )}
+
+              {recordError && (
+                <p className="mt-2 text-sm text-red-400">{recordError}</p>
+              )}
+
+              {recordedVideo && (
+                <div className="mt-2 space-y-2">
+                  <video
+                    src={recordedVideo}
+                    controls
+                    className="w-full h-32 rounded-lg bg-black"
+                  />
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-emerald-400">✓ Vídeo gravado</span>
+                    <button
+                      onClick={handleRemoveVideo}
+                      className="text-sm text-red-400 hover:text-red-300 underline"
+                    >
+                      Remover vídeo
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -322,14 +452,14 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={handleClose}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isRecording}
               className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!description.trim() || isSubmitting}
+              disabled={!description.trim() || isSubmitting || isRecording}
               className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-lg hover:from-cyan-400 hover:to-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (

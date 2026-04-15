@@ -3,3 +3,4 @@
  */
 
 export { CaptureManager } from './CaptureManager';
+export { ScreenRecorder } from './ScreenRecorder';

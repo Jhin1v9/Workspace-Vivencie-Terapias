@@ -5,6 +5,7 @@
 
 import type { InspectedElement, BugReport, CreateReportData } from '../types';
 import { CanvasAnnotationEngine } from './CanvasAnnotationEngine';
+import { ScreenRecorder } from '../capture/ScreenRecorder';
 
 /** Callbacks da UI */
 interface UIManagerCallbacks {
@@ -325,6 +326,10 @@ export class UIManager {
       flex-direction: column;
     `;
 
+    let recordedVideoBase64: string | null = null;
+    let isRecording = false;
+    let recorder: ScreenRecorder | null = null;
+
     const screenshotSection = screenshotUrl ? `
       <div style="margin-bottom: 16px;">
         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
@@ -375,6 +380,27 @@ export class UIManager {
           <textarea data-bugdetector-expected placeholder="Como deveria funcionar? (opcional)" style="width: 100%; min-height: 60px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 14px; resize: vertical; font-family: inherit;"></textarea>
         </div>
         ${screenshotSection}
+        <div style="margin-bottom: 16px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;" data-bugdetector-video-section>
+          <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Gravação de Tela</label>
+          <div data-bugdetector-video-controls>
+            <button data-bugdetector-record-start style="padding: 8px 14px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px;">🔴 Gravar Tela (10s)</button>
+          </div>
+          <div data-bugdetector-video-recording style="display: none; align-items: center; gap: 10px; margin-top: 8px;">
+            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(239,68,68,0.15); color: #f87171; border-radius: 6px; font-size: 13px;">
+              <span style="display: inline-block; width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span>
+              Gravando… <span data-bugdetector-timer>0.0s</span>
+            </span>
+            <button data-bugdetector-record-stop style="padding: 6px 10px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">Parar</button>
+          </div>
+          <div data-bugdetector-video-preview style="display: none; margin-top: 8px;">
+            <video data-bugdetector-video-el style="width: 100%; height: 120px; background: #000; border-radius: 8px;" controls></video>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px;">
+              <span style="font-size: 13px; color: #34d399;">✓ Vídeo gravado</span>
+              <button data-bugdetector-video-remove style="font-size: 13px; color: #f87171; background: none; border: none; cursor: pointer; text-decoration: underline;">Remover vídeo</button>
+            </div>
+          </div>
+          <div data-bugdetector-video-error style="display: none; margin-top: 6px; font-size: 13px; color: #f87171;"></div>
+        </div>
       </div>
       <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 12px;">
         <button data-bugdetector-btn-cancel style="flex: 1; padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">Cancelar</button>
@@ -424,6 +450,7 @@ export class UIManager {
           expectedBehavior,
           element,
           screenshot: includeScreenshot ? (annotatedUrl || screenshotUrl || undefined) : undefined,
+          video: recordedVideoBase64 || undefined,
         });
 
         closeModal();
@@ -443,6 +470,89 @@ export class UIManager {
         (btn as HTMLElement).style.background = '#ef4444';
         btn.setAttribute('data-active', 'true');
       });
+    });
+
+    // Screen recording vanilla bindings
+    const videoSection = modal.querySelector('[data-bugdetector-video-section]') as HTMLElement | null;
+    const recordStartBtn = modal.querySelector('[data-bugdetector-record-start]') as HTMLElement | null;
+    const recordingUI = modal.querySelector('[data-bugdetector-video-recording]') as HTMLElement | null;
+    const recordStopBtn = modal.querySelector('[data-bugdetector-record-stop]') as HTMLElement | null;
+    const timerEl = modal.querySelector('[data-bugdetector-timer]') as HTMLElement | null;
+    const previewUI = modal.querySelector('[data-bugdetector-video-preview]') as HTMLElement | null;
+    const videoEl = modal.querySelector('[data-bugdetector-video-el]') as HTMLVideoElement | null;
+    const removeVideoBtn = modal.querySelector('[data-bugdetector-video-remove]') as HTMLElement | null;
+    const errorEl = modal.querySelector('[data-bugdetector-video-error]') as HTMLElement | null;
+
+    const showError = (msg: string) => {
+      if (errorEl) {
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+      }
+    };
+    const hideError = () => {
+      if (errorEl) errorEl.style.display = 'none';
+    };
+
+    const updateRecordingUI = (show: boolean) => {
+      if (recordStartBtn) recordStartBtn.style.display = show ? 'none' : 'inline-block';
+      if (recordingUI) recordingUI.style.display = show ? 'flex' : 'none';
+    };
+
+    const updatePreviewUI = (show: boolean) => {
+      if (previewUI) previewUI.style.display = show ? 'block' : 'none';
+      if (recordStartBtn) recordStartBtn.style.display = show ? 'none' : 'inline-block';
+    };
+
+    if (!ScreenRecorder.isSupported() && recordStartBtn) {
+      recordStartBtn.style.display = 'none';
+      const noSupport = document.createElement('p');
+      noSupport.style.cssText = 'font-size: 13px; color: #64748b; margin: 0;';
+      noSupport.textContent = 'Seu navegador não suporta gravação de tela.';
+      videoSection?.querySelector('[data-bugdetector-video-controls]')?.appendChild(noSupport);
+    }
+
+    recordStartBtn?.addEventListener('click', async () => {
+      hideError();
+      try {
+        recorder = new ScreenRecorder({
+          maxDuration: 10000,
+          onProgress: (elapsed) => {
+            if (timerEl) timerEl.textContent = `${(elapsed / 1000).toFixed(1)}s`;
+          },
+          onStop: async (blob) => {
+            isRecording = false;
+            updateRecordingUI(false);
+            if (blob && blob.size > 0) {
+              recordedVideoBase64 = await ScreenRecorder.blobToBase64(blob);
+              if (videoEl) videoEl.src = recordedVideoBase64;
+              updatePreviewUI(true);
+            }
+          },
+          onError: (err) => {
+            isRecording = false;
+            updateRecordingUI(false);
+            showError(err.message);
+          },
+        });
+        isRecording = true;
+        updateRecordingUI(true);
+        await recorder.start();
+      } catch (err) {
+        isRecording = false;
+        updateRecordingUI(false);
+        showError(err instanceof Error ? err.message : String(err));
+      }
+    });
+
+    recordStopBtn?.addEventListener('click', () => {
+      recorder?.stop();
+    });
+
+    removeVideoBtn?.addEventListener('click', () => {
+      recordedVideoBase64 = null;
+      if (videoEl) videoEl.src = '';
+      updatePreviewUI(false);
+      if (recordStartBtn) recordStartBtn.style.display = 'inline-block';
     });
 
     this.container.appendChild(modal);

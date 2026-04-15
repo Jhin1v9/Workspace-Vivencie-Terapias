@@ -1,0 +1,62 @@
+- generic [ref=e2]:
+  - generic [ref=e6]:
+    - generic [ref=e7] [cursor=pointer]:
+      - img [ref=e9]
+      - generic [ref=e11]: Prontuários
+    - generic [ref=e12] [cursor=pointer]:
+      - img [ref=e14]
+      - generic [ref=e17]: Mapa Auricular
+    - generic [ref=e18] [cursor=pointer]:
+      - img [ref=e20]
+      - generic [ref=e22]: Sessão
+    - generic [ref=e23] [cursor=pointer]:
+      - img [ref=e25]
+      - generic [ref=e27]: Agenda
+    - generic [ref=e28] [cursor=pointer]:
+      - img [ref=e30]
+      - generic [ref=e32]: Finanças
+    - generic [ref=e33] [cursor=pointer]:
+      - img [ref=e35]
+      - generic [ref=e38]: Navegador
+    - generic [ref=e39] [cursor=pointer]:
+      - img [ref=e41]
+      - generic [ref=e44]: Notas
+    - generic [ref=e45] [cursor=pointer]:
+      - img [ref=e47]
+      - generic [ref=e51]: Studio Sonoro
+    - generic [ref=e52] [cursor=pointer]:
+      - img [ref=e54]
+      - generic [ref=e56]: Protocolos
+    - generic [ref=e57] [cursor=pointer]:
+      - img [ref=e59]
+      - generic [ref=e61]: Biblioteca
+    - generic [ref=e62] [cursor=pointer]:
+      - img [ref=e64]
+      - generic [ref=e67]: Aura AI
+    - generic [ref=e68] [cursor=pointer]:
+      - img [ref=e70]
+      - generic [ref=e73]: Configurações
+  - img [ref=e82] [cursor=pointer]
+  - region "Notifications alt+T"
+  - button "Desativar Debug" [active] [ref=e90] [cursor=pointer]: ✕
+  - button "📋" [ref=e89] [cursor=pointer]
+  - button "✕ Sair do Modo Edição" [ref=e92] [cursor=pointer]:
+    - generic [ref=e93]: ✕
+    - text: Sair do Modo Edição
+  - generic [ref=e98]:
+    - paragraph [ref=e99]: Modo Edição Ativo
+    - paragraph [ref=e100]: Passe o mouse e clique para reportar
+  - generic:
+    - generic:
+      - generic: 👁️
+      - heading "Modo Edição Ativado" [level=3]
+      - paragraph:
+        - text: Passe o mouse sobre qualquer elemento para inspecionar.
+        - text: Clique para adicionar um report de bug.
+      - generic:
+        - generic:
+          - generic: 🖱️
+          - generic: Clique para reportar
+        - generic:
+          - generic: ✕
+          - generic: ESC para cancelar

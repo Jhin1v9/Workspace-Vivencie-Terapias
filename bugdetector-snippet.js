@@ -1968,6 +1968,172 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
     }
 
     /**
+     * ScreenRecorder
+     * Engine vanilla para gravação de tela via getDisplayMedia + MediaRecorder
+     */
+    class ScreenRecorder {
+        constructor(options = {}) {
+            this.stream = null;
+            this.mediaRecorder = null;
+            this.chunks = [];
+            this.timerId = null;
+            this.timeoutId = null;
+            this.startTime = 0;
+            this.isRecording = false;
+            this.options = {
+                maxDuration: 10000,
+                videoBitsPerSecond: 2500000,
+                ...options,
+            };
+        }
+        /** Verifica se o browser suporta gravação de tela */
+        static isSupported() {
+            return typeof navigator !== 'undefined' &&
+                typeof navigator.mediaDevices !== 'undefined' &&
+                typeof navigator.mediaDevices.getDisplayMedia === 'function' &&
+                typeof MediaRecorder !== 'undefined';
+        }
+        /** Detecta o melhor mime type suportado */
+        static getSupportedMimeType() {
+            const types = [
+                'video/webm;codecs=vp9',
+                'video/webm;codecs=vp8',
+                'video/webm',
+                'video/mp4',
+            ];
+            for (const type of types) {
+                if (MediaRecorder.isTypeSupported(type)) {
+                    return type;
+                }
+            }
+            return null;
+        }
+        /** Inicia a gravação de tela */
+        async start() {
+            if (this.isRecording) {
+                throw new Error('Gravação já em andamento');
+            }
+            if (!ScreenRecorder.isSupported()) {
+                throw new Error('Seu navegador não suporta gravação de tela');
+            }
+            const mimeType = this.options.mimeType || ScreenRecorder.getSupportedMimeType();
+            if (!mimeType) {
+                throw new Error('Nenhum formato de vídeo suportado neste navegador');
+            }
+            try {
+                this.stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        frameRate: { ideal: 30 },
+                    },
+                    audio: false,
+                });
+            }
+            catch (err) {
+                const error = err instanceof Error ? err : new Error(String(err));
+                if (error.name === 'NotAllowedError') {
+                    throw new Error('Permissão de gravação negada pelo usuário');
+                }
+                throw new Error(`Falha ao iniciar gravação: ${error.message}`);
+            }
+            // Se o usuário parar compartilhamento via UI do navegador, paramos a gravação
+            this.stream.getVideoTracks().forEach((track) => {
+                track.onended = () => {
+                    this.stop();
+                };
+            });
+            this.mediaRecorder = new MediaRecorder(this.stream, {
+                mimeType,
+                videoBitsPerSecond: this.options.videoBitsPerSecond,
+            });
+            this.chunks = [];
+            this.mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    this.chunks.push(e.data);
+                }
+            };
+            this.mediaRecorder.onstop = () => {
+                this.cleanupTimer();
+                const blob = this.chunks.length > 0 ? new Blob(this.chunks, { type: mimeType }) : null;
+                this.options.onStop?.(blob);
+                this.isRecording = false;
+            };
+            this.mediaRecorder.onerror = () => {
+                this.cleanupTimer();
+                this.options.onError?.(new Error('Erro do MediaRecorder durante a gravação'));
+                this.isRecording = false;
+            };
+            this.mediaRecorder.start(1000); // coleta a cada 1s
+            this.isRecording = true;
+            this.startTime = Date.now();
+            // Progresso a cada 500ms
+            this.timerId = setInterval(() => {
+                const elapsed = Date.now() - this.startTime;
+                this.options.onProgress?.(elapsed);
+            }, 500);
+            // Auto-stop após maxDuration
+            if (this.options.maxDuration && this.options.maxDuration > 0) {
+                this.timeoutId = setTimeout(() => {
+                    this.stop();
+                }, this.options.maxDuration);
+            }
+        }
+        /** Para a gravação manualmente */
+        stop() {
+            if (!this.isRecording)
+                return;
+            try {
+                this.mediaRecorder?.stop();
+                this.stream?.getTracks().forEach((track) => track.stop());
+            }
+            catch {
+                // ignore
+            }
+            this.cleanupTimer();
+            this.isRecording = false;
+        }
+        /** Cancela a gravação e descarta o vídeo */
+        cancel() {
+            if (!this.isRecording)
+                return;
+            this.chunks = [];
+            this.stop();
+        }
+        /** Retorna se está gravando */
+        get recording() {
+            return this.isRecording;
+        }
+        /** Retorna o tempo decorrido em ms */
+        getElapsedTime() {
+            if (!this.isRecording)
+                return 0;
+            return Date.now() - this.startTime;
+        }
+        /** Converte blob para base64 */
+        static blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+        /** Gera uma URL de preview a partir do blob */
+        static createPreviewUrl(blob) {
+            return URL.createObjectURL(blob);
+        }
+        cleanupTimer() {
+            if (this.timerId) {
+                clearInterval(this.timerId);
+                this.timerId = null;
+            }
+            if (this.timeoutId) {
+                clearTimeout(this.timeoutId);
+                this.timeoutId = null;
+            }
+        }
+    }
+
+    /**
      * Gerenciador de UI
      * Controla todos os elementos visuais da ferramenta
      */
@@ -2248,6 +2414,9 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
       display: flex;
       flex-direction: column;
     `;
+            let recordedVideoBase64 = null;
+            let isRecording = false;
+            let recorder = null;
             const screenshotSection = screenshotUrl ? `
       <div style="margin-bottom: 16px;">
         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
@@ -2297,6 +2466,27 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
           <textarea data-bugdetector-expected placeholder="Como deveria funcionar? (opcional)" style="width: 100%; min-height: 60px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 14px; resize: vertical; font-family: inherit;"></textarea>
         </div>
         ${screenshotSection}
+        <div style="margin-bottom: 16px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;" data-bugdetector-video-section>
+          <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Gravação de Tela</label>
+          <div data-bugdetector-video-controls>
+            <button data-bugdetector-record-start style="padding: 8px 14px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px;">🔴 Gravar Tela (10s)</button>
+          </div>
+          <div data-bugdetector-video-recording style="display: none; align-items: center; gap: 10px; margin-top: 8px;">
+            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(239,68,68,0.15); color: #f87171; border-radius: 6px; font-size: 13px;">
+              <span style="display: inline-block; width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span>
+              Gravando… <span data-bugdetector-timer>0.0s</span>
+            </span>
+            <button data-bugdetector-record-stop style="padding: 6px 10px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">Parar</button>
+          </div>
+          <div data-bugdetector-video-preview style="display: none; margin-top: 8px;">
+            <video data-bugdetector-video-el style="width: 100%; height: 120px; background: #000; border-radius: 8px;" controls></video>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px;">
+              <span style="font-size: 13px; color: #34d399;">✓ Vídeo gravado</span>
+              <button data-bugdetector-video-remove style="font-size: 13px; color: #f87171; background: none; border: none; cursor: pointer; text-decoration: underline;">Remover vídeo</button>
+            </div>
+          </div>
+          <div data-bugdetector-video-error style="display: none; margin-top: 6px; font-size: 13px; color: #f87171;"></div>
+        </div>
       </div>
       <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 12px;">
         <button data-bugdetector-btn-cancel style="flex: 1; padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">Cancelar</button>
@@ -2342,6 +2532,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
                         expectedBehavior,
                         element,
                         screenshot: includeScreenshot ? (annotatedUrl || screenshotUrl || undefined) : undefined,
+                        video: recordedVideoBase64 || undefined,
                     });
                     closeModal();
                     this.showSuccessToast('Report criado com sucesso!');
@@ -2360,6 +2551,91 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
                     btn.style.background = '#ef4444';
                     btn.setAttribute('data-active', 'true');
                 });
+            });
+            // Screen recording vanilla bindings
+            const videoSection = modal.querySelector('[data-bugdetector-video-section]');
+            const recordStartBtn = modal.querySelector('[data-bugdetector-record-start]');
+            const recordingUI = modal.querySelector('[data-bugdetector-video-recording]');
+            const recordStopBtn = modal.querySelector('[data-bugdetector-record-stop]');
+            const timerEl = modal.querySelector('[data-bugdetector-timer]');
+            const previewUI = modal.querySelector('[data-bugdetector-video-preview]');
+            const videoEl = modal.querySelector('[data-bugdetector-video-el]');
+            const removeVideoBtn = modal.querySelector('[data-bugdetector-video-remove]');
+            const errorEl = modal.querySelector('[data-bugdetector-video-error]');
+            const showError = (msg) => {
+                if (errorEl) {
+                    errorEl.textContent = msg;
+                    errorEl.style.display = 'block';
+                }
+            };
+            const hideError = () => {
+                if (errorEl)
+                    errorEl.style.display = 'none';
+            };
+            const updateRecordingUI = (show) => {
+                if (recordStartBtn)
+                    recordStartBtn.style.display = show ? 'none' : 'inline-block';
+                if (recordingUI)
+                    recordingUI.style.display = show ? 'flex' : 'none';
+            };
+            const updatePreviewUI = (show) => {
+                if (previewUI)
+                    previewUI.style.display = show ? 'block' : 'none';
+                if (recordStartBtn)
+                    recordStartBtn.style.display = show ? 'none' : 'inline-block';
+            };
+            if (!ScreenRecorder.isSupported() && recordStartBtn) {
+                recordStartBtn.style.display = 'none';
+                const noSupport = document.createElement('p');
+                noSupport.style.cssText = 'font-size: 13px; color: #64748b; margin: 0;';
+                noSupport.textContent = 'Seu navegador não suporta gravação de tela.';
+                videoSection?.querySelector('[data-bugdetector-video-controls]')?.appendChild(noSupport);
+            }
+            recordStartBtn?.addEventListener('click', async () => {
+                hideError();
+                try {
+                    recorder = new ScreenRecorder({
+                        maxDuration: 10000,
+                        onProgress: (elapsed) => {
+                            if (timerEl)
+                                timerEl.textContent = `${(elapsed / 1000).toFixed(1)}s`;
+                        },
+                        onStop: async (blob) => {
+                            isRecording = false;
+                            updateRecordingUI(false);
+                            if (blob && blob.size > 0) {
+                                recordedVideoBase64 = await ScreenRecorder.blobToBase64(blob);
+                                if (videoEl)
+                                    videoEl.src = recordedVideoBase64;
+                                updatePreviewUI(true);
+                            }
+                        },
+                        onError: (err) => {
+                            isRecording = false;
+                            updateRecordingUI(false);
+                            showError(err.message);
+                        },
+                    });
+                    isRecording = true;
+                    updateRecordingUI(true);
+                    await recorder.start();
+                }
+                catch (err) {
+                    isRecording = false;
+                    updateRecordingUI(false);
+                    showError(err instanceof Error ? err.message : String(err));
+                }
+            });
+            recordStopBtn?.addEventListener('click', () => {
+                recorder?.stop();
+            });
+            removeVideoBtn?.addEventListener('click', () => {
+                recordedVideoBase64 = null;
+                if (videoEl)
+                    videoEl.src = '';
+                updatePreviewUI(false);
+                if (recordStartBtn)
+                    recordStartBtn.style.display = 'inline-block';
             });
             this.container.appendChild(modal);
         }
@@ -2670,6 +2946,7 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
                 },
                 element,
                 screenshot: data.screenshot || captures.screenshot,
+                video: data.video,
                 consoleLogs: captures.consoleLogs,
                 networkRequests: captures.networkRequests,
                 performanceMetrics: captures.performanceMetrics,
@@ -11402,16 +11679,3 @@ Responda de forma concisa e técnica, ajudando a identificar e corrigir o proble
 
 })({});
 //# sourceMappingURL=bug-detector.iife.js.map
-
-// === BugDetector Auto-Init ===
-// Inicializa automaticamente ao colar no console
-if (typeof BugDetector !== 'undefined') {
-  BugDetector.autoInit({
-    shortcut: 'ctrl+shift+d',
-    trigger: 'floating-button',
-    persistTo: 'localStorage',
-  });
-  console.log('🐛 BugDetector ativado! Pressione Ctrl+Shift+D ou clique no botão flutuante.');
-} else {
-  console.error('Falha ao carregar BugDetector.');
-}

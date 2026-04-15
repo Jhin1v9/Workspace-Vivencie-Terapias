@@ -188,6 +188,8 @@ export interface BugReport {
   // Capturas
   /** Screenshot em base64 */
   screenshot?: string;
+  /** Vídeo da tela em base64 */
+  video?: string;
   /** Logs do console */
   consoleLogs?: ConsoleLog[];
   /** Requisições de rede */
@@ -488,4 +490,5 @@ export interface CreateReportData {
   expectedBehavior?: string;
   element?: InspectedElement;
   screenshot?: string;
+  video?: string;
 }

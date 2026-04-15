@@ -184,6 +184,7 @@ export class BugDetector {
       },
       element,
       screenshot: data.screenshot || captures.screenshot,
+      video: data.video,
       consoleLogs: captures.consoleLogs,
       networkRequests: captures.networkRequests,
       performanceMetrics: captures.performanceMetrics,

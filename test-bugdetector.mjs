@@ -43,6 +43,30 @@ import { chromium } from 'playwright';
   await page.waitForTimeout(800);
   await page.screenshot({ path: 'bugdetector-test-04d-modal-annotated.png' });
 
+  // Mock getDisplayMedia para testar screen recording sem picker do SO
+  await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 320;
+    canvas.height = 240;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    const stream = canvas.captureStream(30);
+    navigator.mediaDevices.getDisplayMedia = async () => stream;
+  });
+
+  // Iniciar gravação de tela
+  await page.getByRole('button', { name: 'Gravar Tela (10s)' }).click();
+  await page.waitForTimeout(1200);
+  await page.screenshot({ path: 'bugdetector-test-04e-recording.png' });
+
+  // Parar gravação
+  await page.getByRole('button', { name: 'Parar' }).click();
+  await page.waitForTimeout(1000);
+  await page.screenshot({ path: 'bugdetector-test-04f-video-preview.png' });
+
   const textareas = await page.locator('textarea').all();
   await textareas[0].fill('Teste automático do bug-detector: o ícone de Prontuários está desalinhado na taskbar.');
   await textareas[1].fill('O ícone deveria estar centralizado verticalmente.');
