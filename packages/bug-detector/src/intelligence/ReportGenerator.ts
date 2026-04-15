@@ -135,8 +135,9 @@ export class ReportGenerator {
       lines.push('## 📋 Console Logs');
       lines.push('');
       lines.push('```');
+      const emojiMap: Record<string, string> = { log: '📝', warn: '⚠️', error: '❌', info: 'ℹ️' };
       report.consoleLogs.forEach(log => {
-        const emoji = { log: '📝', warn: '⚠️', error: '❌', info: 'ℹ️' }[log.type];
+        const emoji = emojiMap[log.type] ?? '📝';
         lines.push(`${emoji} [${new Date(log.timestamp).toLocaleTimeString()}] ${log.message}`);
       });
       lines.push('```');
@@ -176,7 +177,7 @@ export class ReportGenerator {
     lines.push('');
 
     lines.push('### Descrição Técnica');
-    lines.push(analysis.technicalDescription || 'Não disponível');
+    lines.push(analysis.technicalDescription ?? 'Não disponível');
     lines.push('');
 
     if (analysis.codeFix) {
@@ -239,7 +240,7 @@ export class ReportGenerator {
     lines.push('## 📈 Resumo por Severidade');
     lines.push('');
     Object.entries(bySeverity).forEach(([severity, items]) => {
-      lines.push(`- ${this.getSeverityEmoji(severity as any)} **${severity}**: ${items.length}`);
+      lines.push(`- ${this.getSeverityEmoji(severity)} **${severity}**: ${items.length}`);
     });
     lines.push('');
 
@@ -283,13 +284,14 @@ export class ReportGenerator {
     };
   }
 
-  private static sanitizeForJSON(report: BugReport, options: ExportOptions): any {
-    const data: any = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private static sanitizeForJSON(report: BugReport, options: ExportOptions): Record<string, unknown> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { domElement, ...elementWithoutDom } = report.element as Record<string, any>;
+    
+    const data: Record<string, unknown> = {
       ...report,
-      element: {
-        ...report.element,
-        domElement: undefined, // Remove referência DOM
-      },
+      element: elementWithoutDom,
     };
 
     if (!options.includeScreenshot) {
@@ -359,7 +361,7 @@ export class ReportGenerator {
   // UTILS
   // ============================================================================
 
-  private static formatDate(timestamp: number): string {
+  private static formatDate(timestamp: string | number): string {
     const date = new Date(timestamp);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }

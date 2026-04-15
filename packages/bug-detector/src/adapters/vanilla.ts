@@ -209,14 +209,24 @@ export function autoInit(config: BugDetectorConfig = {}): void {
 // EXTENSÃO DE ELEMENTOS
 // ============================================================================
 
+/** Extensão do Element.prototype */
+interface ElementWithBugDetector extends Element {
+  inspect(): InspectedElement;
+  report(description: string, options?: Partial<CreateReportData>): Promise<BugReport>;
+}
+
 /** Adiciona método inspect a todos os elementos */
 export function extendElements(): void {
   if (typeof Element !== 'undefined') {
-    (Element.prototype as any).inspect = function() {
+    (Element.prototype as ElementWithBugDetector).inspect = function(this: Element) {
       return getBugDetector().inspectElement(this);
     };
 
-    (Element.prototype as any).report = function(description: string, options?: any) {
+    (Element.prototype as ElementWithBugDetector).report = function(
+      this: Element, 
+      description: string, 
+      options?: Partial<CreateReportData>
+    ) {
       const detector = getBugDetector();
       detector.inspectElement(this);
       return detector.createReport({ description, ...options });

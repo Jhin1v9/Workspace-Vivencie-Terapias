@@ -4,6 +4,18 @@
 
 import type { BugReport, GitHubConfig } from '../types';
 
+/** Item de issue do GitHub */
+interface GitHubIssueItem {
+  number: number;
+  title: string;
+  state: string;
+}
+
+/** Resposta da pesquisa do GitHub */
+interface GitHubSearchResponse {
+  items: GitHubIssueItem[];
+}
+
 export class GitHubIntegration {
   private config: GitHubConfig;
 
@@ -107,8 +119,8 @@ export class GitHubIntegration {
       throw new Error(`Erro ao buscar issues: ${error.message}`);
     }
 
-    const data = await response.json();
-    return data.items.map((item: any) => ({
+    const data = (await response.json()) as GitHubSearchResponse;
+    return data.items.map((item) => ({
       number: item.number,
       title: item.title,
       state: item.state,

@@ -4,6 +4,28 @@
 
 import type { BugReport, JiraConfig } from '../types';
 
+/** Content do Jira ADF (Atlassian Document Format) */
+interface JiraADFContent {
+  type: string;
+  text?: string;
+  content?: JiraADFContent[];
+}
+
+/** Description do Jira ADF */
+interface JiraADFDescription {
+  type: 'doc';
+  version: 1;
+  content: JiraADFContent[];
+}
+
+/** Body para atualização de ticket */
+interface JiraUpdateBody {
+  fields: {
+    summary?: string;
+    description?: JiraADFDescription;
+  };
+}
+
 export class JiraIntegration {
   private config: JiraConfig;
 
@@ -75,7 +97,7 @@ export class JiraIntegration {
     issueKey: string,
     updates: { summary?: string; description?: string; status?: string }
   ): Promise<void> {
-    const body: any = { fields: {} };
+    const body: JiraUpdateBody = { fields: {} };
 
     if (updates.summary) {
       body.fields.summary = updates.summary;

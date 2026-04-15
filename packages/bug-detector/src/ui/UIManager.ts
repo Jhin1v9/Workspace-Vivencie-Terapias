@@ -93,11 +93,11 @@ export class UIManager {
     if (!this.container) return;
 
     // Remove botão existente
-    const existing = this.container.querySelector('.bd-floating-button');
+    const existing = this.container.querySelector('[data-bugdetector-floating-button]');
     if (existing) existing.remove();
 
     const button = document.createElement('button');
-    button.className = 'bd-floating-button';
+    button.setAttribute('data-bugdetector-floating-button', '');
     button.innerHTML = '🐛';
     button.title = 'BugDetector Pro';
     button.style.cssText = `
@@ -143,13 +143,13 @@ export class UIManager {
   private renderTooltip(element: InspectedElement | null): void {
     if (!this.container) return;
 
-    const existing = this.container.querySelector('.bd-tooltip');
+    const existing = this.container.querySelector('[data-bugdetector-tooltip]');
     if (existing) existing.remove();
 
     if (!element) return;
 
     const tooltip = document.createElement('div');
-    tooltip.className = 'bd-tooltip';
+    tooltip.setAttribute('data-bugdetector-tooltip', '');
     tooltip.style.cssText = `
       position: fixed;
       top: ${element.rect.top + element.rect.height + 8}px;
@@ -187,14 +187,14 @@ export class UIManager {
   private renderPanel(): void {
     if (!this.container) return;
 
-    const existing = this.container.querySelector('.bd-panel');
+    const existing = this.container.querySelector('[data-bugdetector-panel]');
     if (existing) {
       existing.remove();
       return;
     }
 
     const panel = document.createElement('div');
-    panel.className = 'bd-panel';
+    panel.setAttribute('data-bugdetector-panel', '');
     panel.style.cssText = `
       position: fixed;
       top: 20px;
@@ -216,17 +216,17 @@ export class UIManager {
           <span style="font-size: 20px;">🐛</span>
           <span style="font-weight: 600;">BugDetector Pro</span>
         </div>
-        <button class="bd-close-panel" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 18px; padding: 4px;">×</button>
+        <button data-bugdetector-close-panel style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 18px; padding: 4px;">×</button>
       </div>
       <div style="padding: 16px;">
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button class="bd-btn-inspect" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+          <button data-bugdetector-btn-inspect style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
             <span>🔍</span> Inspecionar Elemento
           </button>
-          <button class="bd-btn-reports" style="padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+          <button data-bugdetector-btn-reports style="padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
             <span>📋</span> Ver Reports
           </button>
-          <button class="bd-btn-settings" style="padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+          <button data-bugdetector-btn-settings style="padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;">
             <span>⚙️</span> Configurações
           </button>
         </div>
@@ -237,12 +237,12 @@ export class UIManager {
     `;
 
     // Event listeners
-    panel.querySelector('.bd-close-panel')?.addEventListener('click', () => panel.remove());
-    panel.querySelector('.bd-btn-inspect')?.addEventListener('click', () => {
+    panel.querySelector('[data-bugdetector-close-panel]')?.addEventListener('click', () => panel.remove());
+    panel.querySelector('[data-bugdetector-btn-inspect]')?.addEventListener('click', () => {
       panel.remove();
       this.callbacks.onActivate();
     });
-    panel.querySelector('.bd-btn-reports')?.addEventListener('click', () => {
+    panel.querySelector('[data-bugdetector-btn-reports]')?.addEventListener('click', () => {
       this.renderReportsList();
       panel.remove();
     });
@@ -258,7 +258,7 @@ export class UIManager {
     if (!this.container) return;
 
     const modal = document.createElement('div');
-    modal.className = 'bd-report-modal';
+    modal.setAttribute('data-bugdetector-report-modal', '');
     modal.style.cssText = `
       position: fixed;
       top: 50%;
@@ -287,19 +287,19 @@ export class UIManager {
             <div style="font-size: 12px; color: #64748b;">&lt;${element.tag}&gt;</div>
           </div>
         </div>
-        <button class="bd-close-modal" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 24px; padding: 4px;">×</button>
+        <button data-bugdetector-close-modal style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 24px; padding: 4px;">×</button>
       </div>
       <div style="padding: 20px; overflow-y: auto; flex: 1;">
         <div style="margin-bottom: 16px;">
           <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Tipo</label>
           <div style="display: flex; gap: 8px;">
-            <button class="bd-type-btn active" data-type="bug" style="flex: 1; padding: 10px; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px;">🐛 Bug</button>
-            <button class="bd-type-btn" data-type="improvement" style="flex: 1; padding: 10px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px;">💡 Melhoria</button>
+            <button data-bugdetector-type-btn data-type="bug" data-active="true" style="flex: 1; padding: 10px; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px;">🐛 Bug</button>
+            <button data-bugdetector-type-btn data-type="improvement" style="flex: 1; padding: 10px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px;">💡 Melhoria</button>
           </div>
         </div>
         <div style="margin-bottom: 16px;">
           <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Severidade</label>
-          <select class="bd-severity" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 14px;">
+          <select data-bugdetector-severity style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 14px;">
             <option value="low">🟢 Baixa</option>
             <option value="medium" selected>🟡 Média</option>
             <option value="high">🟠 Alta</option>
@@ -308,39 +308,40 @@ export class UIManager {
         </div>
         <div style="margin-bottom: 16px;">
           <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Descrição *</label>
-          <textarea class="bd-description" placeholder="Descreva o bug encontrado..." style="width: 100%; min-height: 100px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 14px; resize: vertical; font-family: inherit;"></textarea>
+          <textarea data-bugdetector-description placeholder="Descreva o bug encontrado..." style="width: 100%; min-height: 100px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 14px; resize: vertical; font-family: inherit;"></textarea>
         </div>
         <div style="margin-bottom: 16px;">
           <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Comportamento Esperado</label>
-          <textarea class="bd-expected" placeholder="Como deveria funcionar? (opcional)" style="width: 100%; min-height: 60px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 14px; resize: vertical; font-family: inherit;"></textarea>
+          <textarea data-bugdetector-expected placeholder="Como deveria funcionar? (opcional)" style="width: 100%; min-height: 60px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 14px; resize: vertical; font-family: inherit;"></textarea>
         </div>
         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
-          <input type="checkbox" class="bd-screenshot" checked style="width: 18px; height: 18px;">
+          <input type="checkbox" data-bugdetector-screenshot checked style="width: 18px; height: 18px;">
           <span>Incluir screenshot</span>
         </label>
       </div>
       <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 12px;">
-        <button class="bd-btn-cancel" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">Cancelar</button>
-        <button class="bd-btn-submit" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;">Criar Report</button>
+        <button data-bugdetector-btn-cancel style="flex: 1; padding: 12px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">Cancelar</button>
+        <button data-bugdetector-btn-submit style="flex: 1; padding: 12px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;">Criar Report</button>
       </div>
     `;
 
     // Event listeners
     const closeModal = () => modal.remove();
     
-    modal.querySelector('.bd-close-modal')?.addEventListener('click', closeModal);
-    modal.querySelector('.bd-btn-cancel')?.addEventListener('click', closeModal);
+    modal.querySelector('[data-bugdetector-close-modal]')?.addEventListener('click', closeModal);
+    modal.querySelector('[data-bugdetector-btn-cancel]')?.addEventListener('click', closeModal);
     
-    modal.querySelector('.bd-btn-submit')?.addEventListener('click', async () => {
-      const description = (modal.querySelector('.bd-description') as HTMLTextAreaElement)?.value;
+    modal.querySelector('[data-bugdetector-btn-submit]')?.addEventListener('click', async () => {
+      const description = (modal.querySelector('[data-bugdetector-description]') as HTMLTextAreaElement)?.value;
       if (!description?.trim()) {
         alert('Por favor, descreva o bug');
         return;
       }
 
-      const type = (modal.querySelector('.bd-type-btn.active') as HTMLElement)?.dataset.type as any;
-      const severity = (modal.querySelector('.bd-severity') as HTMLSelectElement)?.value as any;
-      const expectedBehavior = (modal.querySelector('.bd-expected') as HTMLTextAreaElement)?.value;
+      const activeTypeBtn = modal.querySelector('[data-bugdetector-type-btn][data-active="true"]') as HTMLElement;
+      const type = activeTypeBtn?.dataset.type as 'bug' | 'improvement' | 'question';
+      const severity = (modal.querySelector('[data-bugdetector-severity]') as HTMLSelectElement)?.value as 'low' | 'medium' | 'high' | 'critical';
+      const expectedBehavior = (modal.querySelector('[data-bugdetector-expected]') as HTMLTextAreaElement)?.value;
       try {
         await this.callbacks.onCreateReport({
           description,
@@ -358,14 +359,14 @@ export class UIManager {
     });
 
     // Type buttons
-    modal.querySelectorAll('.bd-type-btn').forEach(btn => {
+    modal.querySelectorAll('[data-bugdetector-type-btn]').forEach(btn => {
       btn.addEventListener('click', () => {
-        modal.querySelectorAll('.bd-type-btn').forEach(b => {
+        modal.querySelectorAll('[data-bugdetector-type-btn]').forEach(b => {
           (b as HTMLElement).style.background = 'rgba(255,255,255,0.1)';
-          b.classList.remove('active');
+          b.removeAttribute('data-active');
         });
         (btn as HTMLElement).style.background = '#ef4444';
-        btn.classList.add('active');
+        btn.setAttribute('data-active', 'true');
       });
     });
 

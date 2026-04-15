@@ -63,7 +63,15 @@ export {
 } from './ui';
 
 // Hooks React
-export { useBugDetector, BugDetectorContext } from './hooks/useBugDetector';
+export {
+  useBugDetector,
+  BugDetectorContext,
+  useConsoleCapture,
+  useNetworkMonitor,
+  useScreenCapture,
+  useAIAnalyzer,
+  useElementInspector,
+} from './hooks';
 
 // Intelligence
 export { IntelligenceEngine } from './intelligence/IntelligenceEngine';
@@ -82,6 +90,15 @@ export { SlackIntegration } from './integrations/Slack';
 
 // Utils
 export { RateLimiter } from './utils/RateLimiter';
+
+// DevTools
+export {
+  ConsoleCapture,
+  NetworkMonitor,
+  DeviceInfo,
+  ScreenRecorder,
+  AIAnalyzer,
+} from './devtools';
 
 // Version
 export const VERSION = '1.0.0';

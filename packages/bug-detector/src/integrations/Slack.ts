@@ -4,6 +4,37 @@
 
 import type { BugReport, SlackConfig } from '../types';
 
+/** Field do Slack attachment */
+interface SlackField {
+  title: string;
+  value: string;
+  short: boolean;
+}
+
+/** Action do Slack attachment */
+interface SlackAction {
+  type: string;
+  text: string;
+  url: string;
+  style?: string;
+}
+
+/** Attachment do Slack */
+interface SlackAttachment {
+  color: string;
+  fields: SlackField[];
+  footer: string;
+  ts: number;
+  actions?: SlackAction[];
+}
+
+/** Payload do Slack webhook */
+interface SlackPayload {
+  text: string;
+  channel?: string;
+  attachments: SlackAttachment[];
+}
+
 export class SlackIntegration {
   private config: SlackConfig;
 
@@ -30,7 +61,7 @@ export class SlackIntegration {
 
   /** Envia notificação simples */
   async sendMessage(text: string, channel?: string): Promise<void> {
-    const payload: any = { text };
+    const payload: { text: string; channel?: string } = { text };
     
     if (channel || this.config.channel) {
       payload.channel = channel || this.config.channel;
@@ -53,50 +84,36 @@ export class SlackIntegration {
   // PRIVATE METHODS
   // ============================================================================
 
-  private generatePayload(report: BugReport, channel?: string): any {
+  private generatePayload(report: BugReport, channel?: string): SlackPayload {
     const color = this.getSeverityColor(report.severity);
     const emoji = this.getTypeEmoji(report.type);
 
-    const payload: any = {
-      text: `${emoji} Novo bug reportado`,
-      attachments: [
-        {
-          color,
-          fields: [
-            {
-              title: 'Descrição',
-              value: report.description.slice(0, 300),
-              short: false,
-            },
-            {
-              title: 'Severidade',
-              value: report.severity.toUpperCase(),
-              short: true,
-            },
-            {
-              title: 'Elemento',
-              value: `\`${report.element.selector}\``,
-              short: true,
-            },
-            {
-              title: 'URL',
-              value: report.url,
-              short: false,
-            },
-          ],
-          footer: 'BugDetector Pro',
-          ts: Math.floor(report.timestamp / 1000),
-        },
-      ],
-    };
-
-    if (channel || this.config.channel) {
-      payload.channel = channel || this.config.channel;
-    }
+    const fields: SlackField[] = [
+      {
+        title: 'Descrição',
+        value: report.description.slice(0, 300),
+        short: false,
+      },
+      {
+        title: 'Severidade',
+        value: report.severity.toUpperCase(),
+        short: true,
+      },
+      {
+        title: 'Elemento',
+        value: `\`${report.element.selector}\``,
+        short: true,
+      },
+      {
+        title: 'URL',
+        value: report.url,
+        short: false,
+      },
+    ];
 
     // Adiciona análise IA se disponível
     if (report.aiAnalysis) {
-      payload.attachments[0].fields.push({
+      fields.push({
         title: 'Causa Raiz (IA)',
         value: report.aiAnalysis.rootCause.slice(0, 300),
         short: false,
@@ -105,24 +122,36 @@ export class SlackIntegration {
 
     // Adiciona screenshot se disponível
     if (report.screenshot) {
-      // Slack não suporta base64 diretamente no webhook
-      // Seria necessário fazer upload para um servidor primeiro
-      payload.attachments[0].fields.push({
+      fields.push({
         title: 'Screenshot',
         value: 'Disponível no relatório completo',
         short: false,
       });
     }
 
-    // Adiciona ações
-    payload.attachments[0].actions = [
-      {
-        type: 'button',
-        text: 'Ver Detalhes',
-        url: report.url,
-        style: 'primary',
-      },
-    ];
+    const payload: SlackPayload = {
+      text: `${emoji} Novo bug reportado`,
+      attachments: [
+        {
+          color,
+          fields,
+          footer: 'BugDetector Pro',
+          ts: Math.floor(new Date(report.timestamp).getTime() / 1000),
+          actions: [
+            {
+              type: 'button',
+              text: 'Ver Detalhes',
+              url: report.url,
+              style: 'primary',
+            },
+          ],
+        },
+      ],
+    };
+
+    if (channel || this.config.channel) {
+      payload.channel = channel || this.config.channel;
+    }
 
     return payload;
   }

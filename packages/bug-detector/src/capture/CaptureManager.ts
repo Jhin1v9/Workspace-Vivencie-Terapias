@@ -167,14 +167,14 @@ export class CaptureManager {
     };
 
     // Sobrescreve com LIMITAÇÃO DE MEMÓRIA (FIFO)
-    const captureLog = (type: ConsoleLog['type'], ...args: any[]) => {
+    const captureLog = (level: ConsoleLog['type'], ...args: unknown[]) => {
       const log: ConsoleLog = {
-        type,
+        type: level,
         message: args.map(arg => 
           typeof arg === 'object' ? JSON.stringify(arg).slice(0, 1000) : String(arg).slice(0, 1000)
         ).join(' '),
         timestamp: new Date().toISOString(),
-        stack: type === 'error' ? new Error().stack?.slice(0, 2000) : undefined,
+        stack: level === 'error' ? new Error().stack?.slice(0, 2000) : undefined,
       };
       
       // FIFO: remove o mais antigo se atingiu limite
@@ -184,7 +184,7 @@ export class CaptureManager {
       this.consoleLogs.push(log);
 
       // Mantém comportamento original
-      this.originalConsole[type]?.apply(console, args);
+      this.originalConsole[level]?.apply(console, args);
     };
 
     console.log = (...args) => captureLog('log', ...args);
@@ -247,17 +247,21 @@ export class CaptureManager {
     this.originalXHR = window.XMLHttpRequest;
     const self = this;
 
-    (window as any).XMLHttpRequest = function() {
-      const xhr = new (self.originalXHR as any)();
+    interface InterceptedXHR extends XMLHttpRequest {
+      open(method: string, url: string | URL, async?: boolean, user?: string | null, password?: string | null): void;
+    }
+
+    window.XMLHttpRequest = function(this: InterceptedXHR): InterceptedXHR {
+      const xhr = new (self.originalXHR as typeof XMLHttpRequest)() as InterceptedXHR;
       const startTime = performance.now();
       let requestUrl = '';
       let requestMethod = 'GET';
 
-      const originalOpen = xhr.open;
-      xhr.open = function(method: string, url: string) {
+      const originalOpen = xhr.open.bind(xhr);
+      xhr.open = function(method: string, url: string | URL) {
         requestMethod = method;
-        requestUrl = url;
-        return originalOpen.apply(this, arguments);
+        requestUrl = url.toString();
+        return originalOpen(method, url);
       };
 
       xhr.addEventListener('loadend', function() {
@@ -272,7 +276,7 @@ export class CaptureManager {
       });
 
       return xhr;
-    };
+    } as unknown as typeof XMLHttpRequest;
   }
 
   private restoreNetwork(): void {
