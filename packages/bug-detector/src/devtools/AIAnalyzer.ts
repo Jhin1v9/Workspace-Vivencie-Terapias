@@ -7,7 +7,7 @@ import type { AIAnalysis, BugReport, InspectedElement, ConsoleLog, NetworkReques
 /** Configuração do AIAnalyzer */
 interface AIAnalyzerConfig {
   apiKey: string;
-  provider: 'gemini' | 'deepseek' | 'openai';
+  provider: 'gemini' | 'deepseek' | 'openai' | 'kimi';
   model?: string;
   temperature?: number;
   maxTokens?: number;
@@ -47,6 +47,8 @@ export class AIAnalyzer {
         return this.analyzeWithDeepSeek(prompt, data);
       case 'openai':
         return this.analyzeWithOpenAI(prompt, data);
+      case 'kimi':
+        return this.analyzeWithKimi(prompt, data);
       default:
         throw new Error(`Provider não suportado: ${this.config.provider}`);
     }
@@ -131,6 +133,32 @@ export class AIAnalyzer {
     return this.parseResponse(text, 'openai');
   }
 
+  /** Analisa com Kimi (Moonshot AI) */
+  private async analyzeWithKimi(prompt: string, data: AnalysisData): Promise<AIAnalysis> {
+    const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.config.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.config.model,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: this.config.temperature,
+        max_tokens: this.config.maxTokens,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Kimi API error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    const text = result.choices?.[0]?.message?.content ?? '';
+
+    return this.parseResponse(text, 'kimi');
+  }
+
   /** Constrói o prompt para a IA */
   private buildPrompt(data: AnalysisData): string {
     const logs = data.consoleLogs?.slice(-20).map(l => `[${l.type.toUpperCase()}] ${l.message}`).join('\n') ?? 'Nenhum log';
@@ -179,7 +207,7 @@ ${network}
   }
 
   /** Parse da resposta da IA */
-  private parseResponse(text: string, provider: 'gemini' | 'deepseek' | 'openai'): AIAnalysis {
+  private parseResponse(text: string, provider: 'gemini' | 'deepseek' | 'openai' | 'kimi'): AIAnalysis {
     try {
       // Tentar extrair JSON da resposta
       const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -221,6 +249,8 @@ ${network}
         return 'deepseek-chat';
       case 'openai':
         return 'gpt-4o-mini';
+      case 'kimi':
+        return 'moonshot-v1-8k';
       default:
         return 'gemini-1.5-flash';
     }

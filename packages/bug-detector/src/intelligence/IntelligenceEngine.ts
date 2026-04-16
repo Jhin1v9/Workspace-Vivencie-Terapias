@@ -141,6 +141,10 @@ export class IntelligenceEngine {
       return this.callGemini(prompt);
     } else if (this.config.provider === 'openai') {
       return this.callOpenAI(prompt);
+    } else if (this.config.provider === 'deepseek') {
+      return this.callDeepSeek(prompt);
+    } else if (this.config.provider === 'kimi') {
+      return this.callKimi(prompt);
     }
     throw new Error('Provedor não suportado');
   }
@@ -196,6 +200,56 @@ export class IntelligenceEngine {
 
     if (!response.ok) {
       throw new Error(`Erro na API OpenAI: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '';
+  }
+
+  private async callDeepSeek(prompt: string): Promise<string> {
+    this.rateLimiter.recordRequest();
+    
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.config.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.config.model,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: this.config.temperature,
+        max_tokens: 2048,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro na API DeepSeek: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '';
+  }
+
+  private async callKimi(prompt: string): Promise<string> {
+    this.rateLimiter.recordRequest();
+    
+    const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.config.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.config.model,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: this.config.temperature,
+        max_tokens: 2048,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro na API Kimi: ${response.statusText}`);
     }
 
     const data = await response.json();

@@ -36,7 +36,7 @@ export interface BugDetectorConfig {
 
 /** Configuração de IA */
 export interface AIConfig {
-  provider: 'gemini' | 'openai' | 'none';
+  provider: 'gemini' | 'openai' | 'deepseek' | 'kimi' | 'none';
   apiKey: string;
   /** Modelo a ser usado */
   model?: string;
@@ -291,8 +291,8 @@ export interface DeviceInfo {
 
 /** Análise da IA */
 export interface AIAnalysis {
-  /** Provider usado (gemini, deepseek, openai) */
-  provider: 'gemini' | 'deepseek' | 'openai';
+  /** Provider usado (gemini, deepseek, openai, kimi) */
+  provider: 'gemini' | 'deepseek' | 'openai' | 'kimi';
   /** Categoria do problema */
   category?: BugCategory;
   /** Severidade */
