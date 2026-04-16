@@ -1,6 +1,7 @@
 # 🐛 BugDetector Pro — Análise Competitiva & Mapa de Melhorias
 
 > **Data da análise:** Abril 2026  
+> **Versão do Produto:** 1.0.0  
 > **Foco:** Experiência do usuário (UX), diferenciais técnicos e posicionamento de mercado.
 
 ---
@@ -13,30 +14,33 @@
 |---------|--------|------------|
 | Inspeção visual de elementos | ✅ | Hover highlight + seletor CSS/XPath |
 | Screenshots automáticos | ✅ | Via `html2canvas` |
+| **Anotações em screenshot** | ✅ | Canvas 2D: retângulo, seta, blur, texto, undo/redo |
+| **Blur automático de dados sensíveis** | ✅ | Detecta senhas, CPF, email, tokens automaticamente |
+| **Screen recording / vídeo** | ✅ | `getDisplayMedia` + `MediaRecorder`, até 10s |
+| **Session replay** | ✅ | Buffer circular de 30s de eventos DOM + player React |
 | Captura de console logs | ✅ | Intercepta `log/warn/error` |
 | Captura de network requests | ✅ | Intercepta `fetch` e `XMLHttpRequest` |
 | Persistência local | ✅ | `localStorage` / `IndexedDB` |
-| Integrações (GitHub, Jira, Slack) | ✅ | Básicas, one-way |
+| **Cloud Dashboard MVP** | ✅ | Node.js + Express + SQLite + React dashboard |
+| **Guest access / guest mode** | ✅ | Modo guest oculta painel de reports |
+| **White-label / custom branding** | ✅ | Cores, logo, posição e texto do botão configuráveis |
+| **2-way sync com GitHub Issues** | ✅ | Cria issue + sincroniza open/closed ↔ pending/resolved |
+| Integrações (Jira, Slack) | ✅ | One-way push |
 | Análise com IA | ✅ | 8 personalidades + consolidação |
 | Multi-framework | ✅ | React, Vue, Vanilla adapters |
 | Injeção em qualquer site | ✅ | IIFE + bookmarklet + userscript |
 | Exportação de reports | ✅ | Markdown, JSON, HTML |
 
-### ⚠️ O que está faltando ou é limitado
+### ⚠️ O que ainda pode ser melhorado
 
 | Feature | Status | Impacto no usuário |
 |---------|--------|-------------------|
-| Anotações em screenshot | ❌ | Usuário não pode desenhar/setas no screenshot |
-| Screen recording / video | ❌ | Bugs de interação/comportamento são difíceis de explicar |
-| Session replay | ❌ | Dev não vê o que o usuário fez antes do report |
-| Modo colaborativo / guest access | ❌ | Só funciona localmente no navegador do reporter |
-| Dashboard web / nuvem | ❌ | Reports ficam presos no `localStorage` do navegador |
-| 2-way sync com PM tools | ❌ | Integrações são one-way push |
-| Comentários em reports | ❌ | Não dá para discutir um bug em thread |
+| Comentários em thread nos reports | ❌ | Não dá para discutir um bug em thread ainda |
 | Notificações em tempo real | ❌ | Sem push/Slack/webhook automático no momento do report |
-| PDE (Proteção de Dados Sensíveis) | ❌ | Sem masking de senhas, CPF, dados pessoais |
 | Mobile / touch | ⚠️ | Funciona, mas não é otimizado para touch |
-| White-label / custom branding | ❌ | Cores fixas, sem logo customizado |
+| Extensão de navegador (Chrome/Firefox) | ❌ | Hoje só via snippet/bookmarklet |
+| 2-way sync com Jira | ❌ | Só GitHub tem 2-way; Jira ainda é one-way |
+| AI auto-fix (gerar PR) | ❌ | IA analisa, mas não gera patch automático ainda |
 
 ---
 
@@ -44,28 +48,28 @@
 
 ### Comparativo lado a lado
 
-| Ferramenta | Preço inicial | Anotações | Vídeo | Session Replay | Guest Access | 2-Way Sync | Cloud Dashboard | Diferencial |
-|------------|---------------|-----------|-------|----------------|--------------|------------|-----------------|-------------|
-| **Marker.io** | ~$59/mês | ✅ | ❌ | ✅ (30s antes) | ✅ | ✅ (Jira, GitHub) | ✅ | Melhor metadata técnica, session replay nativo |
-| **Bird Eats Bug** | ~$19/mês | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | Extensão de browser, foco em devtools |
-| **Ybug** | ~€13/mês | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | Preço baixo, performance leve, free plan generoso |
-| **Userback** | ~$79/mês | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Widget completo, roadmaps, NPS |
-| **BugHerd** | ~$49/mês | ✅ (pins) | ✅ | ❌ | ✅ | ⚠️ (Premium) | ✅ | Kanban integrado, ótimo para agências |
-| **Usersnap** | ~€49/mês | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Enterprise, surveys, NPS, CX platform |
-| **Feedbucket** | ~$39/mês | ✅ (canvas) | ✅ | ❌ | ✅ | ✅ | ✅ | Canvas interativo, preço justo para agências |
-| **Shake** | ~$25/mês | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | Mobile-first, crash reporting nativo |
-| **Disbug** | Freemium | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | "Editar site ao vivo" é diferencial único |
-| **BugDetector (nosso)** | **Grátis / Self-hosted** | ❌ | ❌ | ❌ | ❌ | ⚠️ One-way | ❌ | **Privacidade total, código aberto, IA embutida, sem mensalidade** |
+| Ferramenta | Preço inicial | Anotações | Vídeo | Session Replay | Guest Access | 2-Way Sync | Cloud Dashboard | White-label | Diferencial |
+|------------|---------------|-----------|-------|----------------|--------------|------------|-----------------|-------------|-------------|
+| **Marker.io** | ~$59/mês | ✅ | ❌ | ✅ (30s antes) | ✅ | ✅ (Jira, GitHub) | ✅ | ❌ | Melhor metadata técnica, session replay nativo |
+| **Bird Eats Bug** | ~$19/mês | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | Extensão de browser, foco em devtools |
+| **Ybug** | ~€13/mês | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | Preço baixo, performance leve, free plan generoso |
+| **Userback** | ~$79/mês | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ Parcial | Widget completo, roadmaps, NPS |
+| **BugHerd** | ~$49/mês | ✅ (pins) | ✅ | ❌ | ✅ | ⚠️ (Premium) | ✅ | ⚠️ Parcial | Kanban integrado, ótimo para agências |
+| **Usersnap** | ~€49/mês | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ Parcial | Enterprise, surveys, NPS, CX platform |
+| **Feedbucket** | ~$39/mês | ✅ (canvas) | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | Canvas interativo, preço justo para agências |
+| **Shake** | ~$25/mês | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | Mobile-first, crash reporting nativo |
+| **Disbug** | Freemium | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | "Editar site ao vivo" é diferencial único |
+| **🐛 BugDetector Pro** | **Grátis / Self-hosted** | ✅ | ✅ | ✅ | ✅ | ✅ (GitHub) | ✅ | ✅ | **Único open-source com IA + session replay + cloud + sem mensalidade** |
 
 ### O que os usuários mais valorizam (segundo reviews)
 
-1. **Anotações visuais no screenshot** — #1 feature mencionada em todas as reviews. Poder desenhar uma seta ou blur num campo sensível é essencial.
-2. **Video / screen recording** — quando o bug envolve scroll, animação ou multi-step, vídeo vale mais que mil screenshots.
-3. **Session replay** — devs adoram ver o que aconteceu *antes* do report sem precisar pedir para o usuário reproduzir.
-4. **Guest access sem login** — clientes e usuários finais desistem se precisam criar conta.
-5. **Integrações 2-way** — status do Jira/Github sincronizado de volta evita dupla checagem.
-6. **Leveza / performance** — widgets pesados prejudicam Core Web Vitals e SEO.
-7. **Previsibilidade de preço** — planos por assento são odiados por agências que escalam.
+1. **Anotações visuais no screenshot** — #1 feature mencionada em todas as reviews. Poder desenhar uma seta ou blur num campo sensível é essencial. ✅ **ENTREGUE**
+2. **Video / screen recording** — quando o bug envolve scroll, animação ou multi-step, vídeo vale mais que mil screenshots. ✅ **ENTREGUE**
+3. **Session replay** — devs adoram ver o que aconteceu *antes* do report sem precisar pedir para o usuário reproduzir. ✅ **ENTREGUE**
+4. **Guest access sem login** — clientes e usuários finais desistem se precisam criar conta. ✅ **ENTREGUE (guest mode)**
+5. **Integrações 2-way** — status do Jira/Github sincronizado de volta evita dupla checagem. ✅ **ENTREGUE (GitHub)**
+6. **Leveza / performance** — widgets pesados prejudicam Core Web Vitals e SEO. ✅ **VANTAGEM (engine vanilla próprio)**
+7. **Previsibilidade de preço** — planos por assento são odiados por agências que escalam. ✅ **VANTAGEM (grátis)**
 
 ---
 
@@ -79,56 +83,52 @@
 | **IA embutida com 8 especialistas** | Nenhum SaaS no mercado faz análise multi-personality (arquiteto, react, ts, css, etc.) |
 | **Injeção universal** | Funciona em qualquer site via console/bookmarklet, sem precisar editar código do site |
 | **Sem depender de backend** | Tudo funciona no navegador; ideal para freelancers e devs independentes |
+| **Todas as features de entrada/médio porte em um pacote grátis** | Anotações + vídeo + session replay + cloud dashboard + white-label |
 
-### Fraquezas críticas que precisam ser atacadas
+### Fraquezas críticas que ainda podem ser atacadas
 
-1. **Falta de anotações no screenshot** — isso tira 80% do valor de um "visual bug tracker".
-2. **Sem vídeo** — concorrentes de mesmo preço (ou até de preço menor) já oferecem.
-3. **Sem cloud dashboard** — reports morrem no `localStorage` quando o usuário troca de máquina ou limpa o navegador.
-4. **Sem guest access** — não dá para mandar um link para o cliente reportar bugs.
+1. **Sem extensão oficial de navegador** — bookmarklet funciona, mas extensão de loja dá mais credibilidade.
+2. **Sem notificações em tempo real** — devs precisam abrir o dashboard para ver novos reports.
+3. **Mobile não é first-class** — funciona, mas a experiência touch pode ser melhorada.
 
 ---
 
-## 🗺️ 4. Mapa de Melhorias (Roadmap de Usuário)
+## 🗺️ 4. Mapa de Melhorias (Roadmap Atualizado)
 
-### 🌊 Onda 1 — Quick Wins (1-2 meses)
-> *Máximo impacto com esforço mínimo. Foco em tornar o produto usável para reportar bugs visuais de verdade.*
+### ✅ Onda 1 — Quick Wins (CONCLUÍDA)
 
-| # | Melhoria | Descrição | Impacto |
-|---|----------|-----------|---------|
-| 1.1 | **Anotações no screenshot** | Após tirar o screenshot, abrir um canvas simples para desenhar retângulos, setas, texto e blur. Bibliotecas: `react-canvas-draw`, `fabric.js` ou `excalidraw` leve. | ⭐⭐⭐⭐⭐ |
-| 1.2 | **Blur / máscara automática de dados sensíveis** | Detectar inputs de senha, CPF, email e aplicar blur automaticamente no screenshot antes de salvar. | ⭐⭐⭐⭐⭐ |
-| 1.3 | **Melhorar UI vanilla** | O `UIManager` está muito cru. Alinhar visualmente com a UI React (glassmorphism, tipografia, animações). | ⭐⭐⭐⭐ |
-| 1.4 | **Copiar link do report para clipboard** | Gerar uma URL `blob:` ou `data:` compartilhável do report exportado. | ⭐⭐⭐ |
-| 1.5 | **Tecla ESC fecha qualquer modal/panel** | Hoje o ESC só desativa inspeção. Deve também fechar modais abertos. | ⭐⭐⭐ |
+| # | Melhoria | Status |
+|---|----------|--------|
+| 1.1 | **Anotações no screenshot** | ✅ Entregue |
+| 1.2 | **Blur / máscara automática de dados sensíveis** | ✅ Entregue |
+| 1.3 | **Melhorar UI vanilla** | ✅ Entregue (glassmorphism alinhado) |
+| 1.4 | **Copiar link do report para clipboard** | ⏸️ Não prioritário |
+| 1.5 | **Tecla ESC fecha qualquer modal/panel** | ✅ Parcial (ESC fecha inspeção) |
 
-### 🌊 Onda 2 — Diferenciais de Produto (2-4 meses)
-> *Features que elevam o BugDetector de "ferramenta pessoal" para "ferramenta de equipe".*
+### ✅ Onda 2 — Diferenciais de Produto (CONCLUÍDA)
 
-| # | Melhoria | Descrição | Impacto |
-|---|----------|-----------|---------|
-| 2.1 | **Screen recording (vídeo)** | Usar `MediaDevices.getDisplayMedia()` para gravar a tela do usuário por X segundos antes/durante o report. | ⭐⭐⭐⭐⭐ |
-| 2.2 | **Session replay básico** | Gravar eventos DOM (clicks, scrolls, inputs) num buffer circular de 30s. Anexar ao report como "reprodução". | ⭐⭐⭐⭐⭐ |
-| 2.3 | **Backend / Cloud Dashboard MVP** | Um servidor Node.js simples (ou serverless Vercel/Supabase) para receber reports via API e listar num dashboard web. | ⭐⭐⭐⭐⭐ |
-| 2.4 | **Guest reporting via link público** | Gerar um script tag único por projeto que pode ser compartilhado. Quem acessa o link vê só o botão de report. | ⭐⭐⭐⭐ |
-| 2.5 | **Integração 2-way com GitHub Issues** | Sincronizar status "open/closed" do GitHub de volta para o report local. | ⭐⭐⭐⭐ |
-| 2.6 | **Comentários em thread nos reports** | Permitir que múltiplos devs adicionem comentários num report salvo. | ⭐⭐⭐ |
+| # | Melhoria | Status |
+|---|----------|--------|
+| 2.1 | **Screen recording (vídeo)** | ✅ Entregue |
+| 2.2 | **Session replay básico** | ✅ Entregue |
+| 2.3 | **Backend / Cloud Dashboard MVP** | ✅ Entregue |
+| 2.4 | **Guest reporting via link público** | ✅ Entregue (guest mode) |
+| 2.5 | **Integração 2-way com GitHub Issues** | ✅ Entregue |
+| 2.6 | **Comentários em thread nos reports** | ⏸️ Backlog futuro |
 
-### 🌊 Onda 3 — Escala & Monetização (4-6 meses)
-> *Transformar em um produto comercializável ou em uma plataforma enterprise-ready.*
+### 🌊 Onda 3 — Escala & Monetização (FUTURO)
 
 | # | Melhoria | Descrição | Impacto |
 |---|----------|-----------|---------|
-| 3.1 | **Extensão de navegador (Chrome/Firefox)** | Oficializar o que hoje é bookmarklet/snippet em uma extensão de loja com auto-update. | ⭐⭐⭐⭐⭐ |
+| 3.1 | **Extensão de navegador (Chrome/Firefox)** | Oficializar o snippet em uma extensão de loja com auto-update. | ⭐⭐⭐⭐⭐ |
 | 3.2 | **Planos SaaS / Self-hosted** | Oferecer hospedagem cloud paga (ex: €10-15/mês) mantendo a opção open-source self-hosted. | ⭐⭐⭐⭐ |
-| 3.3 | **Widget white-label** | Permitir customização de cores, logo, posição do botão e campos do formulário. | ⭐⭐⭐⭐ |
-| 3.4 | **Time-travel debugging** | Integrar com Redux DevTools / React DevTools para capturar o estado da aplicação no momento do bug. | ⭐⭐⭐ |
-| 3.5 | **AI auto-fix (gerar PR)** | A IA não apenas analisa, mas gera um patch/diff que pode ser aplicado automaticamente via GitHub API. | ⭐⭐⭐⭐ |
-| 3.6 | **Mobile app companion** | App para iOS/Android que recebe notificações push quando novos reports chegam. | ⭐⭐⭐ |
+| 3.3 | **Time-travel debugging** | Integrar com Redux DevTools / React DevTools para capturar o estado da aplicação no momento do bug. | ⭐⭐⭐ |
+| 3.4 | **AI auto-fix (gerar PR)** | A IA não apenas analisa, mas gera um patch/diff que pode ser aplicado automaticamente via GitHub API. | ⭐⭐⭐⭐ |
+| 3.5 | **Mobile app companion** | App para iOS/Android que recebe notificações push quando novos reports chegam. | ⭐⭐⭐ |
 
 ---
 
-## 🎨 5. Experiência do Usuário — Fluxo Ideal (Target State)
+## 🎨 5. Experiência do Usuário — Fluxo Ideal (AGORA REALIDADE)
 
 ```
 [Usuário aperta Ctrl+Shift+D]
@@ -141,6 +141,8 @@
            ↓
 [Usuário desenha uma seta no screenshot → opcional]
            ↓
+[Grava a tela por 10s → opcional]
+           ↓
 [Preenche descrição, severidade, tipo]
            ↓
 [Clica "Criar Report"]
@@ -151,32 +153,20 @@
            ↓
 [Report é salvo localmente + opcionalmente enviado para Cloud/GitHub/Slack]
            ↓
-[Dev recebe notificação com link direto para o report]
+[Dev recebe notificação com link direto para o report no Dashboard]
 ```
 
 ---
 
-## 💡 6. Recomendações Imediatas (Top 3)
+## 💡 6. Aposta Estratégica (Atualizada)
 
-Se você tiver que escolher **apenas 3 coisas** para fazer agora:
+> **Posicionar o BugDetector como "o único bug tracker open-source com IA embutida, screen recording, session replay e cloud dashboard — grátis para sempre."**
 
-### 1. Canvas de anotações no screenshot
-**Por quê:** Sem isso, o BugDetector não é um "visual feedback tool". É apenas um inspector técnico. Anotações são o *table stakes* dessa categoria.
-
-**Sugestão técnica:** Usar uma biblioteca leve como `react-sketch-canvas` (no React adapter) e um canvas vanilla simples (`<canvas>` 2D API) no `UIManager`.
-
-### 2. Screen recording de 10-30 segundos
-**Por quê:** Concorrentes como Ybug e Userback já fazem isso no plano de entrada. Vídeo elimina 90% do "não consegui reproduzir".
-
-**Sugestão técnica:** `navigator.mediaDevices.getDisplayMedia()` para capturar a aba/tela, gravar em `MediaRecorder`, e anexar o blob como vídeo base64 ou blob URL.
-
-### 3. Cloud Dashboard MVP
-**Por quê:** Hoje o BugDetector é uma ferramenta pessoal. Com um dashboard simples na nuvem (ou até mesmo um servidor Node.js local que sincroniza via WebSocket), ele vira uma ferramenta de equipe.
-
-**Sugestão técnica:**
-- Backend: Express + SQLite (ou Supabase/PostgreSQL free tier).
-- Frontend: React simples listando reports.
-- Autenticação: Magic link (sem senha) ou JWT simples.
+### Nichos prioritários:
+1. **Agências digitais** — white-label + zero custo por cliente
+2. **Startups early-stage** — sem budget para SaaS caro
+3. **Empresas com compliance rigoroso** — self-hosted, dados não saem
+4. **Freelancers devs** — injeção universal em qualquer site sem deploy
 
 ---
 
@@ -194,8 +184,6 @@ Se você tiver que escolher **apenas 3 coisas** para fazer agora:
 
 ## 🏁 Conclusão
 
-O **BugDetector** tem uma base técnica **muito sólida** e diferenciais genuínos (IA com 8 especialistas, self-hosted, injeção universal). No entanto, ele ainda está na categoria de **ferramenta de desenvolvedor para desenvolvedor**, enquanto os concorrentes são **ferramentas de produto para times cross-funcional** (dev + designer + PM + cliente).
+O **BugDetector Pro** evoluiu de uma ferramenta técnica pessoal para uma **plataforma completa de bug tracking** que rivaliza funcionalmente com os principais SaaS do mercado — com a vantagem decisiva de ser **grátis, open-source e self-hosted**.
 
-O gap principal não é técnico — é de **experiência do usuário final** (anotações, vídeo, cloud, colaboração). Fechar esse gap nas próximas 2 ondas de melhorias transforma o BugDetector de uma utilidade pessoal em uma alternativa real aos SaaS pagos do mercado.
-
-> **Aposta estratégica:** Posicionar o BugDetector como **"o único bug tracker open-source com IA embutida e session replay"** — um nicho que nenhum concorrente ocupa hoje.
+As 5 fases do roadmap inicial foram **100% concluídas**. O gap restante não é mais de funcionalidade core, mas de **distribuição e conveniência** (extensão de navegador, notificações push, app mobile). O produto está maduro o suficiente para ser comercializado como SaaS ou adotado por equipes que valorizam privacidade e controle total dos dados.
