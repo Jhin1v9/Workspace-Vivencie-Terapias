@@ -22,18 +22,18 @@ interface OSState {
 const gerarId = () => Math.random().toString(36).substr(2, 9);
 
 const posicoesIniciais: Record<JanelaOS['app'], { x: number; y: number }> = {
-  clinica: { x: 100, y: 80 },
-  mapa: { x: 150, y: 100 },
+  clinica: { x: 100, y: 96 },
+  mapa: { x: 150, y: 110 },
   studio: { x: 200, y: 120 },
-  config: { x: 250, y: 140 },
-  aura: { x: 300, y: 160 },
-  protocolos: { x: 350, y: 180 },
-  knowledge: { x: 400, y: 200 },
-  sessao: { x: 180, y: 90 },
-  calendario: { x: 120, y: 70 },
-  financas: { x: 200, y: 100 },
-  browser: { x: 100, y: 60 },
-  notas: { x: 130, y: 80 },
+  config: { x: 250, y: 130 },
+  aura: { x: 300, y: 140 },
+  protocolos: { x: 350, y: 150 },
+  knowledge: { x: 400, y: 160 },
+  sessao: { x: 180, y: 100 },
+  calendario: { x: 120, y: 96 },
+  financas: { x: 200, y: 110 },
+  browser: { x: 100, y: 96 },
+  notas: { x: 130, y: 100 },
 };
 
 const getTamanhoInicial = (app: JanelaOS['app']) => {

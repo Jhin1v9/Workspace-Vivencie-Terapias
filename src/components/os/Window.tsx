@@ -102,7 +102,9 @@ export const Window: React.FC<WindowProps> = ({ janela }) => {
 
   return (
     <motion.div
-      className="absolute"
+      className="absolute window-container"
+      data-app={janela.app}
+      data-window-id={janela.id}
       style={{
         left: janela.maximizada ? 0 : janela.posicao.x,
         top: janela.maximizada ? 48 : janela.posicao.y,
@@ -126,6 +128,7 @@ export const Window: React.FC<WindowProps> = ({ janela }) => {
       <div className={`window flex flex-col h-full min-w-[400px] min-h-[400px] ${isClinico ? 'bg-white/95 border-slate-200' : ''}`}>
         {/* Header - Draggable */}
         <div 
+          data-testid="window-header"
           className={`window-header cursor-move ${isClinico ? 'bg-slate-100 border-slate-200' : ''}`}
           onMouseDown={handleMouseDown}
         >
@@ -134,19 +137,25 @@ export const Window: React.FC<WindowProps> = ({ janela }) => {
           </span>
           <div className="window-controls">
             <motion.button
+              data-testid="window-minimize"
               className="window-btn window-btn-minimize"
+              onMouseDown={(e) => e.stopPropagation()}
               onClick={() => minimizarJanela(janela.id)}
               whileHover={{ scale: 1.2 }}
               whileTap={{ scale: 0.9 }}
             />
             <motion.button
+              data-testid="window-maximize"
               className="window-btn window-btn-maximize"
+              onMouseDown={(e) => e.stopPropagation()}
               onClick={() => janela.maximizada ? restaurarJanela(janela.id) : maximizarJanela(janela.id)}
               whileHover={{ scale: 1.2 }}
               whileTap={{ scale: 0.9 }}
             />
             <motion.button
+              data-testid="window-close"
               className="window-btn window-btn-close"
+              onMouseDown={(e) => e.stopPropagation()}
               onClick={() => fecharJanela(janela.id)}
               whileHover={{ scale: 1.2 }}
               whileTap={{ scale: 0.9 }}

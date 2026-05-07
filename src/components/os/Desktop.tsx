@@ -239,7 +239,7 @@ export const Desktop: React.FC = () => {
       style={wallpaperPersonalizado ? getCustomWallpaperStyle() : {}}
     >
       {/* Overlay sutil para melhorar contraste geral */}
-      <div className={`absolute inset-0 transition-opacity duration-500 ${isLight ? 'bg-black/10' : 'bg-black/20'}`} />
+      <div className={`absolute inset-0 pointer-events-none transition-opacity duration-500 ${isLight ? 'bg-black/10' : 'bg-black/20'}`} />
 
       {/* Área de trabalho com ícones */}
       <div className="absolute inset-0 pt-24 pb-8 px-4">
@@ -251,6 +251,8 @@ export const Desktop: React.FC = () => {
             return (
               <motion.div
                 key={icone.id}
+                data-testid={`desktop-icon-${icone.id}`}
+                data-app={icone.app}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}

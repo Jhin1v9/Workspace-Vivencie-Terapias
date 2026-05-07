@@ -19,7 +19,7 @@ function AppContent() {
       <AuraPresence />
       <Toaster />
       <BugDetectorFloatingButton position="bottom-right" />
-      <button onClick={openPanel} title="Ver Reports" style={{ position: 'fixed', bottom: 90, right: 20, zIndex: 2147483647, width: 48, height: 48, borderRadius: '50%', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>📋</button>
+      <button onClick={openPanel} title="Ver Reports" style={{ position: 'fixed', bottom: 160, right: 20, zIndex: 50, width: 48, height: 48, borderRadius: '50%', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>📋</button>
     </>
   );
 }

@@ -150,6 +150,7 @@ const AuraOrbCompacto = memo<{ onClick: () => void }>(({ onClick }) => {
 
   return (
     <motion.div
+      data-testid="aura-orb"
       className="fixed bottom-6 right-6 z-50 cursor-pointer"
       initial={{ scale: 0, opacity: 0 }}
       animate={controls}
@@ -334,9 +335,11 @@ const AuraInterface = memo<{
   }, [registrarAcao]);
 
   // Estilo condicional
-  const containerClasses = modo === 'window' 
+  const containerClasses = modo === 'window'
     ? "w-full h-full bg-slate-900 flex flex-col"
     : "fixed bottom-6 right-6 w-[420px] h-[600px] bg-slate-900 rounded-2xl shadow-2xl border border-white/10 flex flex-col z-50 overflow-hidden";
+
+  const dataTestId = modo === 'window' ? undefined : 'aura-overlay';
   
   // Pegar as 4 melhores sugestões para mostrar como botões
   const sugestoesTop = useMemo(() => {
@@ -347,6 +350,7 @@ const AuraInterface = memo<{
   
   return (
     <motion.div
+      data-testid={dataTestId}
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -570,6 +574,7 @@ const AuraInterface = memo<{
         <div className="flex gap-2">
           <div className="flex-1 relative">
             <textarea
+              data-testid="aura-input"
               ref={inputRef}
               value={inputTexto}
               onChange={(e) => setInputTexto(e.target.value)}
@@ -602,6 +607,7 @@ const AuraInterface = memo<{
           </div>
           
           <motion.button
+            data-testid="aura-enviar"
             whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)' }}
             whileTap={{ scale: 0.95 }}
             onClick={handleEnviar}

@@ -896,6 +896,7 @@ export const ClinicaApp: React.FC = () => {
             />
           </div>
           <motion.button
+            data-testid="clinica-novo-paciente-btn"
             className="w-full btn-primary mt-3 flex items-center justify-center gap-2"
             onClick={() => setShowModalNovo(true)}
             whileTap={{ scale: 0.98 }}
@@ -1133,6 +1134,7 @@ export const ClinicaApp: React.FC = () => {
                   <div>
                     <label className="block text-sm text-white/60 mb-1">Nome Completo *</label>
                     <input
+                      data-testid="clinica-modal-nome"
                       type="text"
                       value={novoPaciente.nome}
                       onChange={(e) => setNovoPaciente({ ...novoPaciente, nome: e.target.value })}
@@ -1145,6 +1147,7 @@ export const ClinicaApp: React.FC = () => {
                     <div>
                       <label className="block text-sm text-white/60 mb-1">Data de Nascimento</label>
                       <input
+                        data-testid="clinica-modal-data-nascimento"
                         type="date"
                         value={novoPaciente.data_nascimento}
                         onChange={(e) => setNovoPaciente({ ...novoPaciente, data_nascimento: e.target.value })}
@@ -1209,6 +1212,7 @@ export const ClinicaApp: React.FC = () => {
                   </div>
 
                   <motion.button
+                    data-testid="clinica-modal-salvar"
                     className="w-full btn-primary flex items-center justify-center gap-2 mt-6"
                     onClick={handleCriarPaciente}
                     disabled={!novoPaciente.nome}
